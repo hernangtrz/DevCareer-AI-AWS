@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  # ─── Backend Express ────────────────────────────────────────────────────────
+  backend:
+    image: tuusuario/devcareer-backend:latest
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+
+  # ─── Frontend Next.js ───────────────────────────────────────────────────────
+  frontend:
+    image: tuusuario/devcareer-frontend:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    environment:
+      # Comunicación interna entre contenedores (server-side del Next.js)
+      NEXT_PUBLIC_API_URL: http://backend:3001
+    restart: unless-stopped

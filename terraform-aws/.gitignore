@@ -1,0 +1,16 @@
+# Terraform state (NUNCA subir a repositorios públicos)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Variables con secretos
+terraform.tfvars
+*.auto.tfvars
+
+# Archivos de plan
+*.tfplan
+
+# OS
+.DS_Store
+Thumbs.db
