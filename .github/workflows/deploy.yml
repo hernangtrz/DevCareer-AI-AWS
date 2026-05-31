@@ -1,0 +1,147 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del código fuente
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # 2. Configurar Terraform en el Runner
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+          terraform_wrapper: false
+
+      # 3. Configurar credenciales rotativas de AWS Academy
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      # 4. Iniciar sesión en Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 5. Generar archivo de configuración base de Terraform (sin secretos)
+      - name: Generate Base terraform.tfvars
+        run: |
+          cat <<EOF > terraform-aws/terraform.tfvars
+          aws_region   = "us-east-1"
+          project_name = "devcareer"
+          environment  = "dev"
+          
+          vpc_cidr           = "10.0.0.0/16"
+          availability_zones = ["us-east-1a", "us-east-1b"]
+          public_subnets     = ["10.0.1.0/24", "10.0.2.0/24"]
+          private_subnets    = ["10.0.10.0/24", "10.0.11.0/24"]
+          database_subnets   = ["10.0.20.0/24", "10.0.21.0/24"]
+          
+          backend_image  = "hernang09/devcareer-backend:v2"
+          
+          frontend_cpu           = 256
+          frontend_memory        = 512
+          backend_cpu            = 256
+          backend_memory         = 512
+          frontend_desired_count = 1
+          backend_desired_count  = 1
+          
+          port     = "3001"
+          node_env = "production"
+          
+          dynamo_table_users      = "devcareer_users"
+          dynamo_table_interviews = "devcareer_interviews"
+          dynamo_table_feedback   = "devcareer_feedback"
+          EOF
+
+      # 6. FASE 1: Aplicar Terraform para crear la infraestructura base y ALB
+      - name: Terraform Init & Apply (Base)
+        env:
+          TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
+          TF_VAR_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
+          TF_VAR_firebase_client_email: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          TF_VAR_firebase_private_key: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          TF_VAR_next_public_firebase_api_key: ${{ secrets.FIREBASE_API_KEY }}
+          TF_VAR_next_public_firebase_auth_domain: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          TF_VAR_next_public_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
+          TF_VAR_next_public_firebase_storage_bucket: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          TF_VAR_next_public_firebase_messaging_sender_id: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          TF_VAR_next_public_firebase_app_id: ${{ secrets.FIREBASE_APP_ID }}
+          TF_VAR_next_public_firebase_measurement_id: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
+          TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
+        run: |
+          cd terraform-aws
+          # Eliminar estado del lab anterior
+          rm -f terraform.tfstate terraform.tfstate.backup
+          terraform init
+          terraform apply -auto-approve
+
+      # 7. Extraer el DNS generado dinámicamente para el Balanceador de Carga
+      - name: Extract Frontend ALB DNS
+        id: alb_dns
+        run: |
+          cd terraform-aws
+          DNS=$(terraform output -raw frontend_alb_dns)
+          echo "DNS=$DNS" >> $GITHUB_OUTPUT
+
+      # 8. FASE 2: Build y Push del Frontend con la URL del ALB inyectada
+      - name: Build and Push Frontend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=http://${{ steps.alb_dns.outputs.DNS }}
+            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
+            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
+            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
+            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
+            NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
+            NEXT_PUBLIC_VAPI_WEB_TOKEN=${{ secrets.VAPI_WEB_TOKEN }}
+            NEXT_PUBLIC_VAPI_WORKFLOW_ID=${{ secrets.VAPI_WORKFLOW_ID }}
+
+      # 9. FASE 3: Aplicar Terraform final para actualizar ECS con la nueva imagen Docker
+      - name: Terraform Apply (Final Update)
+        env:
+          TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
+          TF_VAR_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
+          TF_VAR_firebase_client_email: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          TF_VAR_firebase_private_key: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          TF_VAR_next_public_firebase_api_key: ${{ secrets.FIREBASE_API_KEY }}
+          TF_VAR_next_public_firebase_auth_domain: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          TF_VAR_next_public_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
+          TF_VAR_next_public_firebase_storage_bucket: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          TF_VAR_next_public_firebase_messaging_sender_id: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          TF_VAR_next_public_firebase_app_id: ${{ secrets.FIREBASE_APP_ID }}
+          TF_VAR_next_public_firebase_measurement_id: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
+          TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
+          TF_VAR_frontend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
+        run: |
+          cd terraform-aws
+          terraform apply -auto-approve
