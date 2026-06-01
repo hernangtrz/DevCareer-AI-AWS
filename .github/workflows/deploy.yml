@@ -140,6 +140,7 @@ jobs:
 
       # Guardar el estado actual para pasarlo al siguiente Job
       - name: Upload Current State
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: terraform-state
@@ -269,6 +270,7 @@ jobs:
 
       # Subir el estado final definitivo
       - name: Upload Final State for Next Runs
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: terraform-state
