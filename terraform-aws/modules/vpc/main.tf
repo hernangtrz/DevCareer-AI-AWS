@@ -85,24 +85,24 @@ resource "aws_subnet" "database" {
 # NAT GATEWAY  (permite salida a Internet desde subredes privadas)
 # ─────────────────────────────────────────
 resource "aws_eip" "nat" {
-  count  = length(var.public_subnets)
+  count  = 1
   domain = "vpc"
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-nat-eip-${count.index + 1}"
+    Name        = "${var.project_name}-${var.environment}-nat-eip"
     Project     = var.project_name
     Environment = var.environment
   }
 }
 
 resource "aws_nat_gateway" "this" {
-  count = length(var.public_subnets)
+  count = 1
 
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
+  allocation_id = aws_eip.nat[0].id
+  subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-nat-${count.index + 1}"
+    Name        = "${var.project_name}-${var.environment}-nat"
     Project     = var.project_name
     Environment = var.environment
   }
@@ -143,7 +143,7 @@ resource "aws_route_table" "private" {
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.this[count.index].id
+    nat_gateway_id = aws_nat_gateway.this[0].id
   }
 
   tags = {
