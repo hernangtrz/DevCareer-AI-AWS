@@ -266,6 +266,7 @@ jobs:
           TF_VAR_frontend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
         run: |
           cd terraform-aws
+          terraform init
           terraform apply -auto-approve
 
       # Subir el estado final definitivo
