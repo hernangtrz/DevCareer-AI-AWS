@@ -184,7 +184,7 @@ resource "aws_ecs_task_definition" "backend" {
 # ECS SERVICE — FRONTEND
 # ──────────────────────────────────────────────────────────────────────────────
 resource "aws_ecs_service" "frontend" {
-  name            = "${var.project_name}-${var.environment}-svc-frontend"
+  name            = "${var.project_name}-${var.environment}-service-frontend"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.frontend.arn
   desired_count   = var.frontend_desired_count
@@ -212,7 +212,7 @@ resource "aws_ecs_service" "frontend" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-svc-frontend"
+    Name        = "${var.project_name}-${var.environment}-service-frontend"
     Project     = var.project_name
     Environment = var.environment
   }
@@ -222,7 +222,7 @@ resource "aws_ecs_service" "frontend" {
 # ECS SERVICE — BACKEND
 # ──────────────────────────────────────────────────────────────────────────────
 resource "aws_ecs_service" "backend" {
-  name            = "${var.project_name}-${var.environment}-svc-backend"
+  name            = "${var.project_name}-${var.environment}-service-backend"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.backend.arn
   desired_count   = var.backend_desired_count
@@ -250,7 +250,7 @@ resource "aws_ecs_service" "backend" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-svc-backend"
+    Name        = "${var.project_name}-${var.environment}-service-backend"
     Project     = var.project_name
     Environment = var.environment
   }
