@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      clean_state:
+        description: 'Forzar borrado de estado (manual)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   # ────────────────────────────────────────────────────────────────────────────
@@ -31,6 +38,45 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
+
+      # Descargar el estado de la ejecución anterior
+      - name: Download Previous Terraform State
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Buscando estado previo de Terraform..."
+          gh run download --name terraform-state --dir terraform-aws || echo "No se encontró estado previo en GitHub."
+
+      # Automatización Autocurativa: Detectar si cambió el Lab de AWS
+      - name: Auto-Detect Lab Rotation (Self-Healing State)
+        run: |
+          STATE_FILE="terraform-aws/terraform.tfstate"
+          if [ -f "$STATE_FILE" ]; then
+            echo "Analizando coincidencia de cuenta de AWS en el estado previo..."
+            
+            # Extraer el primer ARN de AWS en el archivo de estado para obtener el Account ID anterior
+            FIRST_ARN=$(grep -oE 'arn:aws:[a-zA-Z0-9._-]+:[a-z0-9-]+:[0-9]{12}:[a-zA-Z0-9._/-]+' "$STATE_FILE" | head -n 1 || true)
+            
+            if [ -n "$FIRST_ARN" ]; then
+              STATE_ACCOUNT=$(echo "$FIRST_ARN" | cut -d':' -f5)
+              CURRENT_ACCOUNT=$(aws sts get-caller-identity --query "Account" --output text)
+              
+              echo "Cuenta en estado previo: $STATE_ACCOUNT"
+              echo "Cuenta activa del Lab:  $CURRENT_ACCOUNT"
+              
+              if [ "$STATE_ACCOUNT" != "$CURRENT_ACCOUNT" ] || [ "${{ github.event.inputs.clean_state }}" = "true" ]; then
+                echo "⚠️ Se detectó un cambio de cuenta de AWS Academy o limpieza forzada."
+                echo "Eliminando estado obsoleto para iniciar despliegue limpio en el nuevo laboratorio..."
+                rm -f terraform-aws/terraform.tfstate terraform-aws/terraform.tfstate.backup
+              else
+                echo "✅ Las cuentas coinciden. Continuando con despliegue incremental sobre el mismo laboratorio."
+              fi
+            else
+              echo "El archivo de estado no contiene recursos creados aún."
+            fi
+          else
+            echo "No hay archivo de estado previo. Se iniciará un despliegue limpio."
+          fi
 
       - name: Generate Base terraform.tfvars
         run: |
@@ -82,7 +128,6 @@ jobs:
           TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
         run: |
           cd terraform-aws
-          rm -f terraform.tfstate terraform.tfstate.backup
           terraform init
           terraform apply -auto-approve
 
@@ -92,6 +137,15 @@ jobs:
           cd terraform-aws
           DNS=$(terraform output -raw frontend_alb_dns)
           echo "DNS=$DNS" >> $GITHUB_OUTPUT
+
+      # Guardar el estado actual para pasarlo al siguiente Job
+      - name: Upload Current State
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-state
+          path: |
+            terraform-aws/terraform.tfstate
+            terraform-aws/terraform.tfstate.backup
 
   # ────────────────────────────────────────────────────────────────────────────
   # FASE 2: Build y Push de la Imagen Docker del Frontend
@@ -153,6 +207,13 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
+      # Descargar el estado transferido desde la Fase 1
+      - name: Download State from Phase 1
+        uses: actions/download-artifact@v3
+        with:
+          name: terraform-state
+          path: terraform-aws/
+
       - name: Generate Base terraform.tfvars
         run: |
           cat <<EOF > terraform-aws/terraform.tfvars
@@ -205,3 +266,12 @@ jobs:
         run: |
           cd terraform-aws
           terraform apply -auto-approve
+
+      # Subir el estado final definitivo
+      - name: Upload Final State for Next Runs
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-state
+          path: |
+            terraform-aws/terraform.tfstate
+            terraform-aws/terraform.tfstate.backup
