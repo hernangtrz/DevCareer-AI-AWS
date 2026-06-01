@@ -23,7 +23,7 @@ jobs:
       alb_dns: ${{ steps.alb_dns.outputs.DNS }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -140,7 +140,7 @@ jobs:
 
       # Guardar el estado actual para pasarlo al siguiente Job
       - name: Upload Current State
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-state
           path: |
@@ -156,7 +156,7 @@ jobs:
     needs: infra-base
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
@@ -191,7 +191,7 @@ jobs:
     needs: [infra-base, build-frontend]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -209,7 +209,7 @@ jobs:
 
       # Descargar el estado transferido desde la Fase 1
       - name: Download State from Phase 1
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: terraform-state
           path: terraform-aws/
@@ -269,7 +269,7 @@ jobs:
 
       # Subir el estado final definitivo
       - name: Upload Final State for Next Runs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: terraform-state
           path: |
