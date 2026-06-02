@@ -48,22 +48,10 @@ variable "frontend_url" {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
-# FIREBASE ADMIN (backend)
+# COGNITO AUTH
 # ──────────────────────────────────────────────────────────────────────────────
-variable "firebase_project_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "firebase_client_email" {
-  type      = string
-  sensitive = true
-}
-
-variable "firebase_private_key" {
-  type      = string
-  sensitive = true
-}
+variable "cognito_user_pool_id" { type = string }
+variable "cognito_client_id"    { type = string }
 
 # ──────────────────────────────────────────────────────────────────────────────
 # AWS CREDENTIALS / DYNAMODB (backend)
@@ -108,45 +96,6 @@ variable "dynamo_table_feedback" {
 variable "google_generative_ai_api_key" {
   type      = string
   sensitive = true
-}
-
-# ──────────────────────────────────────────────────────────────────────────────
-# FIREBASE CLIENT SDK — NEXT_PUBLIC_* (frontend, inyectadas en runtime)
-# ──────────────────────────────────────────────────────────────────────────────
-variable "next_public_api_url" {
-  type    = string
-  default = ""
-}
-
-variable "next_public_firebase_api_key" {
-  type      = string
-  sensitive = true
-}
-
-variable "next_public_firebase_auth_domain" {
-  type = string
-}
-
-variable "next_public_firebase_project_id" {
-  type = string
-}
-
-variable "next_public_firebase_storage_bucket" {
-  type = string
-}
-
-variable "next_public_firebase_messaging_sender_id" {
-  type = string
-}
-
-variable "next_public_firebase_app_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "next_public_firebase_measurement_id" {
-  type    = string
-  default = ""
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

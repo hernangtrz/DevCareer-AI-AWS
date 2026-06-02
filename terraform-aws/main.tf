@@ -59,6 +59,16 @@ module "alb" {
 }
 
 # ─────────────────────────────────────────
+# COGNITO — AUTH
+# ─────────────────────────────────────────
+module "cognito" {
+  source = "./modules/cognito"
+
+  project_name = var.project_name
+  environment  = var.environment
+}
+
+# ─────────────────────────────────────────
 # ECS CLUSTER + SERVICES
 # ─────────────────────────────────────────
 module "ecs" {
@@ -102,22 +112,17 @@ module "ecs" {
   dynamo_table_interviews = module.dynamodb.table_interviews_name
   dynamo_table_feedback   = module.dynamodb.table_feedback_name
 
-  depends_on = [module.dynamodb]
+  depends_on = [module.dynamodb, module.cognito]
 
   # Google Gemini (backend)
   google_generative_ai_api_key = var.google_generative_ai_api_key
 
-  # Firebase Client SDK + Vapi (frontend — runtime inject)
-  next_public_api_url                      = "http://${module.alb.external_alb_dns}"
-  next_public_firebase_api_key             = var.next_public_firebase_api_key
-  next_public_firebase_auth_domain         = var.next_public_firebase_auth_domain
-  next_public_firebase_project_id          = var.next_public_firebase_project_id
-  next_public_firebase_storage_bucket      = var.next_public_firebase_storage_bucket
-  next_public_firebase_messaging_sender_id = var.next_public_firebase_messaging_sender_id
-  next_public_firebase_app_id              = var.next_public_firebase_app_id
-  next_public_firebase_measurement_id      = var.next_public_firebase_measurement_id
-  next_public_vapi_web_token               = var.next_public_vapi_web_token
-  next_public_vapi_workflow_id             = var.next_public_vapi_workflow_id
+  # Cognito Auth + Vapi (frontend — runtime inject)
+  next_public_api_url          = "http://${module.alb.external_alb_dns}"
+  cognito_user_pool_id         = module.cognito.user_pool_id
+  cognito_client_id            = module.cognito.client_id
+  next_public_vapi_web_token   = var.next_public_vapi_web_token
+  next_public_vapi_workflow_id = var.next_public_vapi_workflow_id
 
   # Task sizing
   frontend_cpu           = var.frontend_cpu

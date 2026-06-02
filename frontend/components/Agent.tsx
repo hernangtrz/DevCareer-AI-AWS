@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/api";
-import { auth } from "@/firebase/client";
+import { getCognitoIdToken } from "@/lib/cognito";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -70,11 +70,8 @@ const Agent = ({
     console.log("Generate feedback here.");
 
     try {
-      // Esperar a que el estado de autenticación de Firebase esté listo
-      await auth.authStateReady();
-      // Obtener idToken del usuario actual de Firebase Auth
-      const currentUser = auth.currentUser;
-      const idToken = currentUser ? await currentUser.getIdToken() : "";
+      // Obtener ID Token de Cognito desde localStorage
+      const idToken = getCognitoIdToken();
 
       const { success, feedbackId: id } = await createFeedback(
         {

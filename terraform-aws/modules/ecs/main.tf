@@ -87,17 +87,13 @@ resource "aws_ecs_task_definition" "frontend" {
       # BACKEND_URL apunta al ALB interno en puerto 80
       # El ALB interno escucha en 80 y reenvía al puerto 3000 del backend
       environment = [
-        { name = "INTERNAL_API_URL",                           value = "http://${var.backend_alb_dns}" },
-        { name = "NEXT_PUBLIC_API_URL",                        value = var.next_public_api_url },
-        { name = "NEXT_PUBLIC_FIREBASE_API_KEY",               value = var.next_public_firebase_api_key },
-        { name = "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",           value = var.next_public_firebase_auth_domain },
-        { name = "NEXT_PUBLIC_FIREBASE_PROJECT_ID",            value = var.next_public_firebase_project_id },
-        { name = "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",        value = var.next_public_firebase_storage_bucket },
-        { name = "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",   value = var.next_public_firebase_messaging_sender_id },
-        { name = "NEXT_PUBLIC_FIREBASE_APP_ID",                value = var.next_public_firebase_app_id },
-        { name = "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID",        value = var.next_public_firebase_measurement_id },
-        { name = "NEXT_PUBLIC_VAPI_WEB_TOKEN",                 value = var.next_public_vapi_web_token },
-        { name = "NEXT_PUBLIC_VAPI_WORKFLOW_ID",               value = var.next_public_vapi_workflow_id }
+        { name = "INTERNAL_API_URL",             value = "http://${var.backend_alb_dns}" },
+        { name = "NEXT_PUBLIC_API_URL",           value = var.next_public_api_url },
+        { name = "NEXT_PUBLIC_COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
+        { name = "NEXT_PUBLIC_COGNITO_CLIENT_ID",    value = var.cognito_client_id },
+        { name = "NEXT_PUBLIC_AWS_REGION",           value = var.aws_region },
+        { name = "NEXT_PUBLIC_VAPI_WEB_TOKEN",    value = var.next_public_vapi_web_token },
+        { name = "NEXT_PUBLIC_VAPI_WORKFLOW_ID",  value = var.next_public_vapi_workflow_id }
       ]
 
       logConfiguration = {
@@ -149,13 +145,9 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "PORT",          value = var.port },
         { name = "NODE_ENV",      value = var.node_env },
         { name = "FRONTEND_URL",  value = var.frontend_url },
-        { name = "FIREBASE_PROJECT_ID",    value = var.firebase_project_id },
-        { name = "FIREBASE_CLIENT_EMAIL",  value = var.firebase_client_email },
-        { name = "FIREBASE_PRIVATE_KEY",   value = var.firebase_private_key },
-        { name = "AWS_REGION",             value = var.aws_region },
-        # NO pasar AWS_ACCESS_KEY_ID/SECRET/SESSION_TOKEN aquí —
-        # el SDK usa automáticamente el LabRole (task_role_arn) via
-        # container metadata, que no expira con el lab.
+        { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
+        { name = "COGNITO_CLIENT_ID",    value = var.cognito_client_id },
+        { name = "AWS_REGION",           value = var.aws_region },
         { name = "DYNAMO_TABLE_USERS",       value = var.dynamo_table_users },
         { name = "DYNAMO_TABLE_INTERVIEWS",  value = var.dynamo_table_interviews },
         { name = "DYNAMO_TABLE_FEEDBACK",    value = var.dynamo_table_feedback },

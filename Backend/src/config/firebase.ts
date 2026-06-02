@@ -1,24 +1,10 @@
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+/**
+ * config/firebase.ts — DEPRECADO
+ *
+ * La autenticación fue migrada de Firebase Admin SDK a Amazon Cognito.
+ * Usa config/cognito.ts en su lugar.
+ *
+ * @deprecated Usa `import { cognitoIdVerifier } from "./cognito"`
+ */
 
-const initFirebaseAdmin = () => {
-  const apps = getApps();
-
-  if (!apps.length) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.split(
-          String.raw`\n`
-        ).join("\n"),
-      }),
-    });
-  }
-
-  return {
-    auth: getAuth(),
-  };
-};
-
-export const { auth } = initFirebaseAdmin();
+export {};

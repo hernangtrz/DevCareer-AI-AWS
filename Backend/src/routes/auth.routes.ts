@@ -1,17 +1,20 @@
 import { Router, Request, Response } from "express";
-import { auth } from "../config/firebase";
+import { cognitoIdVerifier } from "../config/cognito";
 import { getUserById, createUser } from "../services/users.service";
 import { requireAuth, AuthRequest } from "../middleware/auth.middleware";
 
 const router = Router();
 
+// ──────────────────────────────────────────────────────────────────────────────
 // POST /auth/signup
-// Registra el usuario en DynamoDB después de que Firebase Auth lo crea en el cliente
+// Se llama DESPUÉS de que Cognito confirme el email del usuario.
+// Crea el registro del usuario en DynamoDB con su sub (UUID) de Cognito.
+// ──────────────────────────────────────────────────────────────────────────────
 router.post("/signup", async (req: Request, res: Response): Promise<void> => {
   const { uid, name, email } = req.body;
 
   if (!uid || !name || !email) {
-    res.status(400).json({ success: false, message: "Faltan campos requeridos: uid, name, email" });
+    res.status(400).json({ success: false, message: "Faltan campos: uid, name, email" });
     return;
   }
 
@@ -30,10 +33,10 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
 
     res.status(201).json({
       success: true,
-      message: "Cuenta creada con éxito. Por favor inicia sesión.",
+      message: "Cuenta registrada con éxito.",
     });
   } catch (error: any) {
-    console.error("Error en signup:", error);
+    console.error("Error en /auth/signup:", error);
 
     if (error.name === "ConditionalCheckFailedException") {
       res.status(409).json({
@@ -47,8 +50,11 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
 // POST /auth/signin
-// Verifica el idToken de Firebase y devuelve un session cookie (token de sesión)
+// Recibe el ID Token de Cognito y lo valida.
+// Retorna sessionCookie = el mismo ID Token (el frontend lo guarda en cookie httpOnly).
+// ──────────────────────────────────────────────────────────────────────────────
 router.post("/signin", async (req: Request, res: Response): Promise<void> => {
   const { idToken } = req.body;
 
@@ -58,45 +64,50 @@ router.post("/signin", async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
-    // Verificar el token y crear session cookie (válido 1 semana)
-    const ONE_WEEK_MS = 60 * 60 * 24 * 7 * 1000;
-    const sessionCookie = await auth.createSessionCookie(idToken, {
-      expiresIn: ONE_WEEK_MS,
-    });
+    // Verificar que el token sea válido (firmado por nuestro Cognito User Pool)
+    const payload = await cognitoIdVerifier.verify(idToken);
 
+    // Auto-crear usuario en DynamoDB si no existe
+    const uid   = payload.sub;
+    const email = payload.email as string;
+    const name  = (payload.name as string) || email.split("@")[0];
+
+    const existing = await getUserById(uid);
+    if (!existing) {
+      await createUser({ id: uid, name, email });
+      console.log(`👤 Usuario ${email} auto-creado en DynamoDB (/signin)`);
+    }
+
+    // Retornar el mismo ID Token como "sessionCookie" 
+    // (el cliente lo guarda como cookie httpOnly via /api/auth/session)
     res.status(200).json({
       success: true,
-      sessionCookie,
+      sessionCookie: idToken,
       message: "Sesión iniciada correctamente.",
     });
   } catch (error) {
-    console.error("Error en signin:", error);
-    res.status(401).json({ success: false, message: "Error al iniciar sesión." });
+    console.error("Error en /auth/signin:", error);
+    res.status(401).json({ success: false, message: "Token inválido. Error al iniciar sesión." });
   }
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
 // GET /auth/me
-// Retorna el usuario actual a partir del Bearer token
+// Retorna el usuario actual a partir del Bearer token (ID Token de Cognito)
+// ──────────────────────────────────────────────────────────────────────────────
 router.get("/me", requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     let user = await getUserById(req.userId!);
 
     if (!user) {
-      // Auto-crear usuario en DynamoDB si existe en Firebase Auth
-      try {
-        const firebaseUser = await auth.getUser(req.userId!);
-        user = {
-          id: req.userId!,
-          name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Usuario",
-          email: firebaseUser.email || req.userEmail || "",
-        };
-        await createUser(user);
-        console.log(`👤 Usuario ${user.email} auto-creado en DynamoDB (/me)`);
-      } catch (dbError) {
-        console.error("Error auto-creando usuario en DynamoDB:", dbError);
-        res.status(404).json({ success: false, message: "Usuario no encontrado" });
-        return;
-      }
+      // Auto-crear usuario en DynamoDB si no existe
+      user = {
+        id:    req.userId!,
+        name:  req.userName || req.userEmail?.split("@")[0] || "Usuario",
+        email: req.userEmail || "",
+      };
+      await createUser(user);
+      console.log(`👤 Usuario ${user.email} auto-creado en DynamoDB (/me)`);
     }
 
     res.status(200).json({ success: true, user });
@@ -106,8 +117,10 @@ router.get("/me", requireAuth, async (req: AuthRequest, res: Response): Promise<
   }
 });
 
+// ──────────────────────────────────────────────────────────────────────────────
 // POST /auth/verify-session
-// Verifica un session cookie y retorna el usuario
+// Verifica el ID Token de Cognito guardado como sessionCookie y retorna el usuario.
+// ──────────────────────────────────────────────────────────────────────────────
 router.post("/verify-session", async (req: Request, res: Response): Promise<void> => {
   const { sessionCookie } = req.body;
 
@@ -117,29 +130,22 @@ router.post("/verify-session", async (req: Request, res: Response): Promise<void
   }
 
   try {
-    const decodedClaims = await auth.verifySessionCookie(sessionCookie, true);
-    let user = await getUserById(decodedClaims.uid);
+    const payload = await cognitoIdVerifier.verify(sessionCookie);
+
+    const uid   = payload.sub;
+    const email = payload.email as string;
+    const name  = (payload.name as string) || email.split("@")[0];
+
+    let user = await getUserById(uid);
 
     if (!user) {
-      // Auto-crear usuario en DynamoDB si existe en Firebase Auth
-      try {
-        const firebaseUser = await auth.getUser(decodedClaims.uid);
-        user = {
-          id: decodedClaims.uid,
-          name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Usuario",
-          email: firebaseUser.email || decodedClaims.email || "",
-        };
-        await createUser(user);
-        console.log(`👤 Usuario ${user.email} auto-creado en DynamoDB (/verify-session)`);
-      } catch (dbError) {
-        console.error("Error auto-creando usuario en DynamoDB:", dbError);
-        res.status(404).json({ success: false, message: "Usuario no encontrado" });
-        return;
-      }
+      user = { id: uid, name, email };
+      await createUser(user);
+      console.log(`👤 Usuario ${email} auto-creado en DynamoDB (/verify-session)`);
     }
 
     res.status(200).json({ success: true, user });
-  } catch (error) {
+  } catch {
     res.status(401).json({ success: false, message: "Sesión inválida o expirada" });
   }
 });

@@ -127,22 +127,8 @@ variable "frontend_url" {
 }
 
 # ─────────────────────────────────────────
-# FIREBASE ADMIN (backend)
+# FIREBASE ADMIN (backend) — ELIMINADO: Migrado a Cognito
 # ─────────────────────────────────────────
-variable "firebase_project_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "firebase_client_email" {
-  type      = string
-  sensitive = true
-}
-
-variable "firebase_private_key" {
-  type      = string
-  sensitive = true
-}
 
 # ─────────────────────────────────────────
 # AWS / DYNAMODB
@@ -189,44 +175,6 @@ variable "google_generative_ai_api_key" {
   sensitive = true
 }
 
-# ─────────────────────────────────────────
-# FIREBASE CLIENT SDK (frontend — NEXT_PUBLIC_*)
-# ─────────────────────────────────────────
-variable "next_public_api_url" {
-  type    = string
-  default = "" # ← agregado (se calcula en main.tf)
-}
-
-variable "next_public_firebase_api_key" {
-  type      = string
-  sensitive = true
-}
-
-variable "next_public_firebase_auth_domain" {
-  type = string
-}
-
-variable "next_public_firebase_project_id" {
-  type = string
-}
-
-variable "next_public_firebase_storage_bucket" {
-  type = string
-}
-
-variable "next_public_firebase_messaging_sender_id" {
-  type = string
-}
-
-variable "next_public_firebase_app_id" {
-  type      = string
-  sensitive = true
-}
-
-variable "next_public_firebase_measurement_id" {
-  type    = string
-  default = ""
-}
 # ─────────────────────────────────────────
 # VAPI (frontend)
 # ─────────────────────────────────────────

@@ -4,41 +4,43 @@ import { z } from "zod";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
-import { auth } from "@/firebase/client";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+  signUpCognito,
+  confirmSignUpCognito,
+  signInCognito,
+} from "@/lib/cognito";
+import { signIn, signUp } from "@/lib/api";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-
-import { signIn, signUp } from "@/lib/api";
 import FormField from "./FormField";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
     name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
     email: z.string().email(),
-    password: z.string().min(3),
+    password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
   });
 };
 
 const AuthForm = ({ type }: { type: FormType }) => {
   const router = useRouter();
+  const [pendingConfirmation, setPendingConfirmation] = useState(false);
+  const [pendingEmail, setPendingEmail]       = useState("");
+  const [pendingName, setPendingName]         = useState("");
+  const [pendingSub, setPendingSub]           = useState("");
+  const [confirmCode, setConfirmCode]         = useState("");
+  const [confirmLoading, setConfirmLoading]   = useState(false);
 
   const formSchema = authFormSchema(type);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
@@ -46,41 +48,26 @@ const AuthForm = ({ type }: { type: FormType }) => {
       if (type === "sign-up") {
         const { name, email, password } = data;
 
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
+        // 1. Registrar usuario en Cognito
+        const { userSub } = await signUpCognito(email, password!, name!);
 
-        const result = await signUp({
-          uid: userCredential.user.uid,
-          name: name!,
-          email,
-        });
+        // 2. Mostrar formulario de confirmación de código
+        setPendingEmail(email);
+        setPendingName(name!);
+        setPendingSub(userSub);
+        setPendingConfirmation(true);
 
-        if (!result.success) {
-          toast.error(result.message);
-          return;
-        }
-
-        toast.success("Cuenta creada con éxito. Por favor inicia sesión.");
-        router.push("/sign-in");
+        toast.info("Te enviamos un código de verificación a tu correo.");
       } else {
         const { email, password } = data;
 
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password,
-        );
+        // 1. Autenticar en Cognito y obtener ID Token
+        const { idToken } = await signInCognito(email, password);
 
-        const idToken = await userCredential.user.getIdToken();
-        if (!idToken) {
-          toast.error("Error al iniciar sesión. Intenta nuevamente.");
-          return;
-        }
+        // 2. Guardar token en localStorage para Client Components (Agent.tsx)
+        localStorage.setItem("cognitoIdToken", idToken);
 
-        // 1. Pedir sessionCookie al backend
+        // 3. Pedir sessionCookie al backend (valida el token y crea usuario en DynamoDB si es necesario)
         const result = await signIn({ idToken });
 
         if (!result.success || !result.sessionCookie) {
@@ -88,7 +75,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
           return;
         }
 
-        // 2. Guardar sessionCookie como cookie httpOnly via Route Handler
+        // 4. Guardar sessionCookie como cookie httpOnly para Server Components
         await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -99,24 +86,105 @@ const AuthForm = ({ type }: { type: FormType }) => {
         router.refresh();
         router.push("/dashboard");
       }
-    } catch (error) {
-      console.log(error);
-      toast.error(`Hubo un error: ${error}`);
+    } catch (error: any) {
+      console.error(error);
+      const msg = error?.message || "Hubo un error. Intenta nuevamente.";
+      toast.error(msg);
+    }
+  };
+
+  // ─── Confirmar código de verificación de Cognito ────────────────────────
+  const handleConfirmCode = async () => {
+    if (!confirmCode || confirmCode.length < 6) {
+      toast.error("Ingresa el código de 6 dígitos que recibiste por email.");
+      return;
+    }
+
+    setConfirmLoading(true);
+    try {
+      // 1. Confirmar cuenta en Cognito
+      await confirmSignUpCognito(pendingEmail, confirmCode);
+
+      // 2. Registrar usuario en DynamoDB del backend
+      const result = await signUp({
+        uid:   pendingSub,
+        name:  pendingName,
+        email: pendingEmail,
+      });
+
+      if (!result.success) {
+        // 409 = ya existe, igual podemos redirigir a login
+        if (result.message?.includes("ya existe")) {
+          toast.success("Cuenta confirmada. Por favor inicia sesión.");
+        } else {
+          toast.error(result.message);
+          return;
+        }
+      } else {
+        toast.success("¡Cuenta creada con éxito! Por favor inicia sesión.");
+      }
+
+      router.push("/sign-in");
+    } catch (error: any) {
+      toast.error(error?.message || "Código inválido o expirado. Intenta de nuevo.");
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
   const isSignIn = type === "sign-in";
 
+  // ─── Pantalla de confirmación de código ─────────────────────────────────
+  if (pendingConfirmation) {
+    return (
+      <div className="card-border lg:min-w-[566px]">
+        <div className="flex flex-col gap-6 card py-14 px-10">
+          <div className="flex flex-row gap-2 justify-center">
+            <Image src="/logo.svg" alt="logo DevCareer AI" height={36} width={36} />
+            <h2 className="text-primary-100">DevCareer AI</h2>
+          </div>
+
+          <h3>Confirma tu correo electrónico</h3>
+          <p className="text-sm text-center opacity-80">
+            Enviamos un código de 6 dígitos a <strong>{pendingEmail}</strong>.
+            Ingrésalo abajo para activar tu cuenta.
+          </p>
+
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="Código de verificación (6 dígitos)"
+            maxLength={6}
+            value={confirmCode}
+            onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, ""))}
+            className="border rounded-md px-4 py-3 text-center text-lg tracking-widest w-full"
+          />
+
+          <Button
+            className="btn"
+            onClick={handleConfirmCode}
+            disabled={confirmLoading}
+          >
+            {confirmLoading ? "Verificando..." : "Verificar cuenta"}
+          </Button>
+
+          <p className="text-center text-sm opacity-70">
+            ¿Ya tienes cuenta?{" "}
+            <Link href="/sign-in" className="font-bold text-user-primary">
+              Inicia sesión
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Formulario principal de login / registro ─────────────────────────
   return (
     <div className="card-border lg:min-w-[566px]">
       <div className="flex flex-col gap-6 card py-14 px-10">
         <div className="flex flex-row gap-2 justify-center">
-          <Image
-            src="/logo.svg"
-            alt="logo de DevCareer AI"
-            height={36}
-            width={36}
-          />
+          <Image src="/logo.svg" alt="logo de DevCareer AI" height={36} width={36} />
           <h2 className="text-primary-100">DevCareer AI</h2>
         </div>
 
@@ -149,7 +217,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
               control={form.control}
               name="password"
               label="Contraseña"
-              placeholder="Ingresa tu contraseña"
+              placeholder="Mínimo 8 caracteres"
               type="password"
             />
 

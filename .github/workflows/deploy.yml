@@ -113,17 +113,7 @@ jobs:
           TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
-          TF_VAR_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
-          TF_VAR_firebase_client_email: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          TF_VAR_firebase_private_key: ${{ secrets.FIREBASE_PRIVATE_KEY }}
           TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
-          TF_VAR_next_public_firebase_api_key: ${{ secrets.FIREBASE_API_KEY }}
-          TF_VAR_next_public_firebase_auth_domain: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          TF_VAR_next_public_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
-          TF_VAR_next_public_firebase_storage_bucket: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          TF_VAR_next_public_firebase_messaging_sender_id: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          TF_VAR_next_public_firebase_app_id: ${{ secrets.FIREBASE_APP_ID }}
-          TF_VAR_next_public_firebase_measurement_id: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
           TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
           TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
         run: |
@@ -173,13 +163,6 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_API_URL=http://${{ needs.infra-base.outputs.alb_dns }}
-            NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
-            NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${{ secrets.FIREBASE_AUTH_DOMAIN }}
-            NEXT_PUBLIC_FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-            NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${{ secrets.FIREBASE_STORAGE_BUCKET }}
-            NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-            NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }}
-            NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }}
             NEXT_PUBLIC_VAPI_WEB_TOKEN=${{ secrets.VAPI_WEB_TOKEN }}
             NEXT_PUBLIC_VAPI_WORKFLOW_ID=${{ secrets.VAPI_WORKFLOW_ID }}
 
@@ -250,17 +233,7 @@ jobs:
           TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
-          TF_VAR_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
-          TF_VAR_firebase_client_email: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          TF_VAR_firebase_private_key: ${{ secrets.FIREBASE_PRIVATE_KEY }}
           TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
-          TF_VAR_next_public_firebase_api_key: ${{ secrets.FIREBASE_API_KEY }}
-          TF_VAR_next_public_firebase_auth_domain: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          TF_VAR_next_public_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
-          TF_VAR_next_public_firebase_storage_bucket: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          TF_VAR_next_public_firebase_messaging_sender_id: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          TF_VAR_next_public_firebase_app_id: ${{ secrets.FIREBASE_APP_ID }}
-          TF_VAR_next_public_firebase_measurement_id: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
           TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
           TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
           TF_VAR_frontend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}

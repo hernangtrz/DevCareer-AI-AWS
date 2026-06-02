@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
-import { auth } from "../config/firebase";
+import { cognitoIdVerifier } from "../config/cognito";
 
 export interface AuthRequest extends Request<ParamsDictionary, any, any, ParsedQs> {
   userId?: string;
   userEmail?: string;
+  userName?: string;
 }
 
 export async function requireAuth(
@@ -23,22 +24,14 @@ export async function requireAuth(
   const token = authHeader.split("Bearer ")[1];
 
   try {
-    // 1. Intentar verificar como ID Token (enviado por Client Components)
-    try {
-      const decodedToken = await auth.verifyIdToken(token);
-      req.userId = decodedToken.uid;
-      req.userEmail = decodedToken.email;
-      next();
-      return;
-    } catch (idTokenError) {
-      // 2. Si falla, intentar verificar como Session Cookie (enviado por Server Components)
-      const decodedClaims = await auth.verifySessionCookie(token, true);
-      req.userId = decodedClaims.uid;
-      req.userEmail = decodedClaims.email;
-      next();
-      return;
-    }
-  } catch (error) {
+    // Verificar el ID Token firmado por Cognito
+    const payload = await cognitoIdVerifier.verify(token);
+
+    req.userId    = payload.sub;            // UUID único de Cognito
+    req.userEmail = payload.email as string;
+    req.userName  = payload.name  as string;
+    next();
+  } catch {
     res.status(401).json({ success: false, message: "Token inválido o expirado" });
   }
 }
