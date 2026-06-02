@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createInterviewFromTemplate } from "@/lib/api";
 import { Button } from "./ui/button";
-import { auth } from "@/firebase/client";
+import { getCognitoIdToken } from "@/lib/cognito";
 
 interface StartTemplateButtonProps {
   templateId: string;
@@ -20,11 +20,8 @@ const StartTemplateButton = ({ templateId, userId }: StartTemplateButtonProps) =
     setLoading(true);
 
     try {
-      // Esperar a que el estado de autenticación de Firebase esté listo
-      await auth.authStateReady();
-      // Obtener idToken del usuario autenticado en Firebase Auth
-      const currentUser = auth.currentUser;
-      const idToken = currentUser ? await currentUser.getIdToken() : "";
+      // Obtener idToken del usuario autenticado en Cognito
+      const idToken = getCognitoIdToken();
 
       const newInterviewId = await createInterviewFromTemplate(templateId, idToken);
       if (newInterviewId) {
