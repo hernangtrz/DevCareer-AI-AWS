@@ -176,12 +176,35 @@ jobs:
             NEXT_PUBLIC_VAPI_WORKFLOW_ID=${{ secrets.VAPI_WORKFLOW_ID }}
 
   # ────────────────────────────────────────────────────────────────────────────
-  # FASE 3: Actualizar ECS Fargate con la nueva versión del Frontend
+  # FASE 2b: Build y Push de la Imagen Docker del Backend
+  # ────────────────────────────────────────────────────────────────────────────
+  build-backend:
+    name: 🐳 2b. Compilar & Subir Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Backend Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./Backend
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:${{ github.sha }}
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # FASE 3: Actualizar ECS Fargate con la nueva versión del Frontend y Backend
   # ────────────────────────────────────────────────────────────────────────────
   deploy-ecs:
     name: 🚀 3. Redesplegar ECS Fargate
     runs-on: ubuntu-latest
-    needs: [infra-base, build-frontend]
+    needs: [infra-base, build-frontend, build-backend]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -220,7 +243,7 @@ jobs:
           private_subnets    = ["10.0.10.0/24", "10.0.11.0/24"]
           database_subnets   = ["10.0.20.0/24", "10.0.21.0/24"]
           
-          backend_image  = "hernang09/devcareer-backend:v2"
+          backend_image  = "${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:${{ github.sha }}"
           
           frontend_cpu           = 256
           frontend_memory        = 512
@@ -246,6 +269,7 @@ jobs:
           TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
           TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
           TF_VAR_frontend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
+          TF_VAR_backend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:${{ github.sha }}
         run: |
           cd terraform-aws
           terraform init
