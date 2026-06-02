@@ -52,8 +52,8 @@ jobs:
           frontend_memory        = 512
           backend_cpu            = 256
           backend_memory         = 512
-          frontend_desired_count = 1
-          backend_desired_count  = 1
+          frontend_desired_count = 2
+          backend_desired_count  = 2
           
           port     = "3001"
           node_env = "production"
