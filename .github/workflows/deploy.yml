@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       alb_dns: ${{ steps.alb_dns.outputs.DNS }}
+      cognito_user_pool_id: ${{ steps.alb_dns.outputs.USER_POOL_ID }}
+      cognito_client_id: ${{ steps.alb_dns.outputs.CLIENT_ID }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -121,12 +123,16 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
-      - name: Extract Frontend ALB DNS
+      - name: Extract Frontend ALB DNS & Cognito Details
         id: alb_dns
         run: |
           cd terraform-aws
           DNS=$(terraform output -raw frontend_alb_dns)
           echo "DNS=$DNS" >> $GITHUB_OUTPUT
+          USER_POOL_ID=$(terraform output -raw cognito_user_pool_id)
+          echo "USER_POOL_ID=$USER_POOL_ID" >> $GITHUB_OUTPUT
+          CLIENT_ID=$(terraform output -raw cognito_client_id)
+          echo "CLIENT_ID=$CLIENT_ID" >> $GITHUB_OUTPUT
 
       # Guardar el estado actual para pasarlo al siguiente Job
       - name: Upload Current State
@@ -163,6 +169,9 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
           build-args: |
             NEXT_PUBLIC_API_URL=http://${{ needs.infra-base.outputs.alb_dns }}
+            NEXT_PUBLIC_COGNITO_USER_POOL_ID=${{ needs.infra-base.outputs.cognito_user_pool_id }}
+            NEXT_PUBLIC_COGNITO_CLIENT_ID=${{ needs.infra-base.outputs.cognito_client_id }}
+            NEXT_PUBLIC_AWS_REGION=us-east-1
             NEXT_PUBLIC_VAPI_WEB_TOKEN=${{ secrets.VAPI_WEB_TOKEN }}
             NEXT_PUBLIC_VAPI_WORKFLOW_ID=${{ secrets.VAPI_WORKFLOW_ID }}
 

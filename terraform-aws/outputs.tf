@@ -64,3 +64,16 @@ output "dynamo_table_feedback" {
   description = "Nombre de la tabla DynamoDB de feedback"
   value       = module.dynamodb.table_feedback_name
 }
+
+# ─────────────────────────────────────────
+# COGNITO
+# ─────────────────────────────────────────
+output "cognito_user_pool_id" {
+  description = "ID del User Pool de Cognito"
+  value       = module.cognito.user_pool_id
+}
+
+output "cognito_client_id" {
+  description = "ID del Cliente de Aplicación de Cognito"
+  value       = module.cognito.client_id
+}
