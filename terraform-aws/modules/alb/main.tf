@@ -23,7 +23,7 @@ resource "aws_lb_target_group" "frontend" {
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
-  target_type = "ip"   # requerido para ECS Fargate
+  target_type = "ip" # requerido para ECS Fargate
 
   health_check {
     enabled             = true
@@ -77,7 +77,7 @@ resource "aws_lb" "internal" {
 # Target Group — Backend (containers escuchan en puerto 3000)
 resource "aws_lb_target_group" "backend" {
   name        = "${var.project_name}-${var.environment}-tg-backend"
-  port        = 3001          # puerto real del contenedor backend
+  port        = 3001 # puerto real del contenedor backend
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
@@ -89,7 +89,7 @@ resource "aws_lb_target_group" "backend" {
     timeout             = 5
     interval            = 30
     path                = "/"
-    matcher             = "200-499"   # amplio para no fallar si /health no existe
+    matcher             = "200-499" # amplio para no fallar si /health no existe
   }
 
   tags = {
@@ -102,7 +102,7 @@ resource "aws_lb_target_group" "backend" {
 # Listener interno: HTTP 80 → Target Group backend (port 3000)
 resource "aws_lb_listener" "backend_http" {
   load_balancer_arn = aws_lb.internal.arn
-  port              = 80           # el frontend llama al ALB en el 80
+  port              = 80 # el frontend llama al ALB en el 80
   protocol          = "HTTP"
 
   default_action {

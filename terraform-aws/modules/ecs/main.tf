@@ -87,13 +87,13 @@ resource "aws_ecs_task_definition" "frontend" {
       # BACKEND_URL apunta al ALB interno en puerto 80
       # El ALB interno escucha en 80 y reenvía al puerto 3000 del backend
       environment = [
-        { name = "INTERNAL_API_URL",             value = "http://${var.backend_alb_dns}" },
-        { name = "NEXT_PUBLIC_API_URL",           value = var.next_public_api_url },
+        { name = "INTERNAL_API_URL", value = "http://${var.backend_alb_dns}" },
+        { name = "NEXT_PUBLIC_API_URL", value = var.next_public_api_url },
         { name = "NEXT_PUBLIC_COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
-        { name = "NEXT_PUBLIC_COGNITO_CLIENT_ID",    value = var.cognito_client_id },
-        { name = "NEXT_PUBLIC_AWS_REGION",           value = var.aws_region },
-        { name = "NEXT_PUBLIC_VAPI_WEB_TOKEN",    value = var.next_public_vapi_web_token },
-        { name = "NEXT_PUBLIC_VAPI_WORKFLOW_ID",  value = var.next_public_vapi_workflow_id }
+        { name = "NEXT_PUBLIC_COGNITO_CLIENT_ID", value = var.cognito_client_id },
+        { name = "NEXT_PUBLIC_AWS_REGION", value = var.aws_region },
+        { name = "NEXT_PUBLIC_VAPI_WEB_TOKEN", value = var.next_public_vapi_web_token },
+        { name = "NEXT_PUBLIC_VAPI_WORKFLOW_ID", value = var.next_public_vapi_workflow_id }
       ]
 
       logConfiguration = {
@@ -142,15 +142,15 @@ resource "aws_ecs_task_definition" "backend" {
 
       # Variables de entorno exactas que consume la app
       environment = [
-        { name = "PORT",          value = var.port },
-        { name = "NODE_ENV",      value = var.node_env },
-        { name = "FRONTEND_URL",  value = var.frontend_url },
+        { name = "PORT", value = var.port },
+        { name = "NODE_ENV", value = var.node_env },
+        { name = "FRONTEND_URL", value = var.frontend_url },
         { name = "COGNITO_USER_POOL_ID", value = var.cognito_user_pool_id },
-        { name = "COGNITO_CLIENT_ID",    value = var.cognito_client_id },
-        { name = "AWS_REGION",           value = var.aws_region },
-        { name = "DYNAMO_TABLE_USERS",       value = var.dynamo_table_users },
-        { name = "DYNAMO_TABLE_INTERVIEWS",  value = var.dynamo_table_interviews },
-        { name = "DYNAMO_TABLE_FEEDBACK",    value = var.dynamo_table_feedback },
+        { name = "COGNITO_CLIENT_ID", value = var.cognito_client_id },
+        { name = "AWS_REGION", value = var.aws_region },
+        { name = "DYNAMO_TABLE_USERS", value = var.dynamo_table_users },
+        { name = "DYNAMO_TABLE_INTERVIEWS", value = var.dynamo_table_interviews },
+        { name = "DYNAMO_TABLE_FEEDBACK", value = var.dynamo_table_feedback },
         { name = "GOOGLE_GENERATIVE_AI_API_KEY", value = var.google_generative_ai_api_key }
       ]
 

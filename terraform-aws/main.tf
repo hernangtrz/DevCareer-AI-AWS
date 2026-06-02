@@ -98,11 +98,6 @@ module "ecs" {
   node_env     = var.node_env
   frontend_url = "http://${module.alb.external_alb_dns}"
 
-  # Firebase Admin (backend)
-  firebase_project_id   = var.firebase_project_id
-  firebase_client_email = var.firebase_client_email
-  firebase_private_key  = var.firebase_private_key
-
   # AWS credentials / DynamoDB (backend)
   aws_access_key_id     = var.aws_access_key_id
   aws_secret_access_key = var.aws_secret_access_key

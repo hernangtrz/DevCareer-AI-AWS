@@ -47,11 +47,11 @@ resource "aws_security_group" "alb_internal" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description     = "HTTP desde tasks del frontend"
-    from_port       = 80
-    to_port         = 80
-    protocol        = "tcp"
-    cidr_blocks     = [var.vpc_cidr]
+    description = "HTTP desde tasks del frontend"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
   }
 
   egress {

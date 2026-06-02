@@ -31,10 +31,10 @@ resource "aws_cognito_user_pool" "this" {
   }
 
   schema {
-    name                     = "name"
-    attribute_data_type      = "String"
-    mutable                  = true
-    required                 = true
+    name                = "name"
+    attribute_data_type = "String"
+    mutable             = true
+    required            = true
     string_attribute_constraints {
       min_length = 1
       max_length = 256
@@ -70,9 +70,9 @@ resource "aws_cognito_user_pool_client" "this" {
   ]
 
   # Expiración de tokens
-  access_token_validity  = 1   # 1 hora
-  id_token_validity      = 1   # 1 hora
-  refresh_token_validity = 30  # 30 días
+  access_token_validity  = 1  # 1 hora
+  id_token_validity      = 1  # 1 hora
+  refresh_token_validity = 30 # 30 días
 
   token_validity_units {
     access_token  = "hours"

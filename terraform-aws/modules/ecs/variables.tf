@@ -2,27 +2,27 @@
 # GENERAL
 # ──────────────────────────────────────────────────────────────────────────────
 variable "project_name" { type = string }
-variable "environment"  { type = string }
-variable "aws_region"   { type = string }
+variable "environment" { type = string }
+variable "aws_region" { type = string }
 
 # ──────────────────────────────────────────────────────────────────────────────
 # NETWORKING
 # ──────────────────────────────────────────────────────────────────────────────
 variable "private_subnet_ids" { type = list(string) }
-variable "frontend_sg_id"     { type = string }
-variable "backend_sg_id"      { type = string }
+variable "frontend_sg_id" { type = string }
+variable "backend_sg_id" { type = string }
 
 # ──────────────────────────────────────────────────────────────────────────────
 # IMAGES
 # ──────────────────────────────────────────────────────────────────────────────
 variable "frontend_image" { type = string }
-variable "backend_image"  { type = string }
+variable "backend_image" { type = string }
 
 # ──────────────────────────────────────────────────────────────────────────────
 # ALB TARGET GROUPS
 # ──────────────────────────────────────────────────────────────────────────────
 variable "frontend_target_group_arn" { type = string }
-variable "backend_target_group_arn"  { type = string }
+variable "backend_target_group_arn" { type = string }
 
 variable "backend_alb_dns" {
   type    = string
@@ -51,7 +51,13 @@ variable "frontend_url" {
 # COGNITO AUTH
 # ──────────────────────────────────────────────────────────────────────────────
 variable "cognito_user_pool_id" { type = string }
-variable "cognito_client_id"    { type = string }
+variable "cognito_client_id" { type = string }
+
+variable "next_public_api_url" {
+  description = "URL pública del ALB externo (inyectada en el frontend en runtime)"
+  type        = string
+  default     = ""
+}
 
 # ──────────────────────────────────────────────────────────────────────────────
 # AWS CREDENTIALS / DYNAMODB (backend)
@@ -113,9 +119,9 @@ variable "next_public_vapi_workflow_id" {
 # ──────────────────────────────────────────────────────────────────────────────
 # TASK SIZING
 # ──────────────────────────────────────────────────────────────────────────────
-variable "frontend_cpu"           { type = number }
-variable "frontend_memory"        { type = number }
-variable "backend_cpu"            { type = number }
-variable "backend_memory"         { type = number }
+variable "frontend_cpu" { type = number }
+variable "frontend_memory" { type = number }
+variable "backend_cpu" { type = number }
+variable "backend_memory" { type = number }
 variable "frontend_desired_count" { type = number }
-variable "backend_desired_count"  { type = number }
+variable "backend_desired_count" { type = number }

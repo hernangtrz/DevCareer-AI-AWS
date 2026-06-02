@@ -14,9 +14,9 @@ resource "aws_dynamodb_table" "users" {
   }
 
   global_secondary_index {
-    name               = "email-index"
-    hash_key           = "email"
-    projection_type    = "ALL"
+    name            = "email-index"
+    hash_key        = "email"
+    projection_type = "ALL"
   }
 
   tags = {
@@ -47,10 +47,10 @@ resource "aws_dynamodb_table" "interviews" {
   }
 
   global_secondary_index {
-    name               = "userId-createdAt-index"
-    hash_key           = "userId"
-    range_key          = "createdAt"
-    projection_type    = "ALL"
+    name            = "userId-createdAt-index"
+    hash_key        = "userId"
+    range_key       = "createdAt"
+    projection_type = "ALL"
   }
 
   tags = {
@@ -81,10 +81,10 @@ resource "aws_dynamodb_table" "feedback" {
   }
 
   global_secondary_index {
-    name               = "interviewId-userId-index"
-    hash_key           = "interviewId"
-    range_key          = "userId"
-    projection_type    = "ALL"
+    name            = "interviewId-userId-index"
+    hash_key        = "interviewId"
+    range_key       = "userId"
+    projection_type = "ALL"
   }
 
   tags = {
