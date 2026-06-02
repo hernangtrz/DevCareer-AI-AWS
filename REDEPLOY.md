@@ -1,80 +1,117 @@
 # 🚀 Guía de Redespliegue — DevCareer AI
 
-Cada vez que inicies una nueva sesión de Laboratorio de AWS Academy, sigue estos pasos en orden.
-Este proceso tarda aproximadamente **15-20 minutos** en total.
+Esta guía contiene las instrucciones actualizadas para desplegar y destruir toda la infraestructura en AWS de la manera más sencilla y automática posible.
 
 ---
 
-## 📋 Requisitos Previos
-- **Docker Desktop** debe estar abierto y corriendo
-- La terminal abierta en la carpeta raíz del proyecto: `c:\Users\herna\Desktop\DevCareer AI`
-- El Lab de AWS Academy debe estar **activo** con credenciales nuevas
+## ⚡ El Camino Fácil: Despliegue con GitHub Actions (CI/CD Pipeline)
+El despliegue está completamente automatizado a través de GitHub Actions. No necesitas realizar compilaciones locales pesadas de Docker ni configurar Terraform en tu máquina. El pipeline se encarga de:
+1. Detectar si rotó la sesión de AWS y limpiar estados obsoletos automáticamente.
+2. Inicializar Terraform y levantar la infraestructura base (VPC, ECS, DynamoDB, ALB, etc.).
+3. Extraer el DNS del balanceador externo, compilar el frontend con la URL correcta y subir la imagen a Docker Hub.
+4. Realizar la actualización en ECS Fargate con la nueva versión en un solo flujo.
+
+### Paso 1: Actualizar Credenciales en GitHub
+Cada vez que inicies un nuevo lab en AWS Academy, las credenciales duran **4 horas**. Actualízalas en tu repositorio de GitHub:
+1. Ve a tu repositorio en GitHub → **Settings** → **Secrets and variables** → **Actions**.
+2. Actualiza los valores de los siguientes secretos con los datos de **AWS Details**:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+   - `AWS_SESSION_TOKEN`
+
+### Paso 2: Lanzar el Pipeline
+1. Ve a la pestaña **Actions** en tu repositorio de GitHub.
+2. Selecciona el workflow **CI/CD Pipeline** a la izquierda.
+3. Haz clic en **Run workflow** → selecciona la rama `main` y haz clic en el botón verde **Run workflow**.
+4. ¡Listo! En aproximadamente **8 minutos**, toda la infraestructura estará activa.
+
+*Al finalizar el workflow, puedes ver el DNS externo generado en el log del paso `Extract Frontend ALB DNS` o buscarlo en la consola de AWS.*
 
 ---
 
-## Paso 1 — Obtener las credenciales nuevas del Lab
+## 🗑️ El Camino Fácil: Destrucción de Recursos (Ahorro de Créditos)
+Para evitar que se consuman los créditos del laboratorio cuando no estés trabajando, debes destruir la infraestructura.
 
-En la pantalla del laboratorio de AWS Academy haz clic en **"AWS Details"** → **"Show"** y copia los 3 valores:
-- `aws_access_key_id` (empieza por `ASIA...`)
-- `aws_secret_access_key`
-- `aws_session_token` (el más largo, empieza por `IQoJ...`)
+### Opción A: Desde GitHub Actions (Recomendado)
+Hemos creado un workflow dedicado para destruir todo con un solo clic:
+1. Ve a **Actions** en tu repositorio de GitHub.
+2. Selecciona el workflow **Destroy Infrastructure** a la izquierda.
+3. Haz clic en **Run workflow** y confirma.
+4. El pipeline ejecutará `terraform destroy` de forma segura utilizando el estado guardado de la ejecución anterior.
+
+### Opción B: Localmente desde PowerShell
+Si prefieres limpiar tu cuenta o corregir recursos huérfanos localmente:
+1. Asegúrate de actualizar las credenciales de AWS en tu archivo local [terraform-aws/terraform.tfvars](file:///c:/Users/herna/Desktop/DevCareer%20AI/terraform-aws/terraform.tfvars).
+2. Ejecuta uno de nuestros scripts automatizados en la carpeta [scripts/](file:///c:/Users/herna/Desktop/DevCareer%20AI/scripts):
+   
+   * **Limpieza normal (Terraform Destroy):**
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File .\scripts\cleanup.ps1
+     ```
+   * **Limpieza profunda (Eliminar VPC y recursos residuales vía CLI):**
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File .\scripts\deep_cleanup.ps1
+     ```
 
 ---
 
-## Paso 2 — Actualizar `terraform.tfvars`
+## 🎤 Configuración de Vapi y Micrófono (Para Entrevistas)
 
-Abre el archivo [`terraform-aws/terraform.tfvars`](terraform-aws/terraform.tfvars) y reemplaza las líneas 14-16 con las credenciales del paso anterior:
+Los navegadores bloquean el micrófono en sitios HTTP. Como el balanceador de carga de AWS Academy no usa HTTPS, sigue estos pasos para habilitarlo:
 
-```hcl
-aws_access_key_id     = "ASIA..."         # ← nuevo valor del Lab
-aws_secret_access_key = "..."             # ← nuevo valor del Lab
-aws_session_token     = "IQoJb3Jp..."    # ← nuevo valor del Lab
+### 1. Iniciar el Proxy Local
+Abre una terminal local en el proyecto y ejecuta el proxy Node.js para reenviar peticiones al nuevo balanceador:
+1. Modifica la variable `targetHost` en [proxy.js](file:///c:/Users/herna/Desktop/DevCareer%20AI/proxy.js) con el nuevo DNS del balanceador de carga externo (`devcareer-dev-alb-ext-...`).
+2. Levanta el proxy local:
+   ```powershell
+   node proxy.js
+   ```
+
+### 2. Crear el Túnel HTTPS
+En una segunda terminal local, abre el túnel seguro:
+```powershell
+ssh -o StrictHostKeyChecking=no -R 80:localhost:8080 nokey@localhost.run
 ```
+Copia la URL segura generada que empieza con `https://` (ej. `https://xxxxxx.lhr.life`).
 
-> ⚠️ Las demás líneas del archivo no cambian. Solo los 3 valores de credenciales.
+### 3. Actualizar Vapi
+1. Entra a [dashboard.vapi.ai](https://dashboard.vapi.ai) → **Tools** → `getUserData`.
+2. Reemplaza el dominio en la **Request URL** con el subdominio de tu túnel:
+   ```
+   https://xxxxxx.lhr.life/api/proxy/api/vapi/generate
+   ```
+3. Haz clic en **Save**.
+
+### 4. Habilitar Micrófono en Chrome / Brave
+1. Navega a `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+2. En el cuadro de texto, ingresa el DNS del frontend (HTTP): `http://devcareer-dev-alb-ext-...elb.amazonaws.com`
+3. Cambia el estado a **Enabled** y presiona **Relaunch**.
 
 ---
 
-## Paso 3 — Limpiar el estado antiguo de Terraform
+## 🛠️ El Camino Manual: Despliegue Local (Alternativa)
+Si necesitas levantar la infraestructura localmente paso a paso sin usar GitHub Actions, sigue estos pasos:
 
-El `tfstate` del lab anterior ya no es válido porque el Account ID cambia entre sesiones:
+### 1. Actualizar credenciales locales
+Actualiza [terraform-aws/terraform.tfvars](file:///c:/Users/herna/Desktop/DevCareer%20AI/terraform-aws/terraform.tfvars) con los 3 valores activos del Lab.
 
+### 2. Limpiar estado anterior
 ```powershell
 Remove-Item -Path "terraform-aws\terraform.tfstate", "terraform-aws\terraform.tfstate.backup" -Force -ErrorAction SilentlyContinue
 ```
 
----
-
-## Paso 4 — Aplicar Terraform (crear toda la infraestructura)
-
+### 3. Aplicar Terraform Base
 ```powershell
-cd "c:\Users\herna\Desktop\DevCareer AI\terraform-aws"
+cd terraform-aws
 terraform init
 terraform apply -auto-approve
 ```
 
-Al finalizar (~5 min) verás este output con los DNS generados:
-
-```
-frontend_alb_dns = "devcareer-dev-alb-ext-XXXXXXXX.us-east-1.elb.amazonaws.com"
-backend_alb_dns  = "internal-devcareer-dev-alb-int-XXXXXXXX.us-east-1.elb.amazonaws.com"
-```
-
-**Guarda el valor de `frontend_alb_dns`**, lo necesitarás en el siguiente paso.
-
----
-
-## Paso 5 — Reconstruir el Frontend con el nuevo DNS del ALB
-
-El frontend tiene la URL del balanceador de carga **compilada dentro de la imagen Docker**. Como el DNS cambia con cada lab, hay que reconstruirla.
-
-Reemplaza `<frontend_alb_dns>` con el valor del paso anterior e incrementa el número de versión (v11 → v12, v12 → v13, etc.):
-
+### 4. Compilar y Subir Frontend
 ```powershell
-cd "c:\Users\herna\Desktop\DevCareer AI\frontend"
-
+cd ../frontend
 docker build `
-  --build-arg NEXT_PUBLIC_API_URL=http://<frontend_alb_dns> `
+  --build-arg NEXT_PUBLIC_API_URL=http://<NUEVO_ALB_DNS> `
   --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyCsScqZzOIxRpf9uCuWZuRNk8MywsQyPSc" `
   --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="prepwise-614c4.firebaseapp.com" `
   --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="prepwise-614c4" `
@@ -84,157 +121,14 @@ docker build `
   --build-arg NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-LV8MJSQCZT" `
   --build-arg NEXT_PUBLIC_VAPI_WEB_TOKEN="76e26462-fbaa-43ed-a7ad-2afad444677d" `
   --build-arg NEXT_PUBLIC_VAPI_WORKFLOW_ID="ab2a7208-e677-4952-95e9-05108448a006" `
-  -t hernang09/devcareer-frontend:v12 .
+  -t hernang09/devcareer-frontend:v13 .
 
-docker push hernang09/devcareer-frontend:v12
+docker push hernang09/devcareer-frontend:v13
 ```
 
-> 📝 **Regla:** Cada vez que relances el lab, incrementa el número de versión del tag (v12, v13, v14...). Esto obliga a ECS a descargar la imagen nueva.
-
----
-
-## Paso 6 — Actualizar el tag del frontend en Terraform y redesplegar
-
-Edita [`terraform-aws/terraform.tfvars`](terraform-aws/terraform.tfvars), línea 11:
-
-```hcl
-frontend_image = "hernang09/devcareer-frontend:v12"  # ← el nuevo tag
-```
-
-Luego aplica de nuevo:
-
+### 5. Actualizar Tag del Frontend y Aplicar
+Modifica `frontend_image` en `terraform.tfvars` al nuevo tag (ej: `"hernang09/devcareer-frontend:v13"`) y corre de nuevo:
 ```powershell
-cd "c:\Users\herna\Desktop\DevCareer AI\terraform-aws"
+cd ../terraform-aws
 terraform apply -auto-approve
-```
-
-ECS tardará **2-3 minutos** en reemplazar las tareas antiguas con la nueva imagen.
-
----
-
-## Paso 7 — Verificar la App en el Navegador
-
-Abre en el navegador:
-
-```
-http://<frontend_alb_dns>
-```
-
-- ✅ Registrar una cuenta nueva → debe redirigir al dashboard
-- ✅ Iniciar sesión → debe llegar al dashboard sin bucles
-- ✅ Crear una entrevista → Gemini debe generar preguntas
-
----
-
-## Paso 8 — Configurar el Túnel HTTPS para Vapi (para hacer entrevistas)
-
-Los navegadores modernos bloquean el acceso al micrófono si la página no corre en HTTPS. Como el ALB de AWS Academy usa HTTP, necesitamos crear un túnel seguro.
-
-### 8.1 — Abrir el proxy local (Terminal 1)
-
-Abre una **primera terminal** y ejecuta el proxy Node.js:
-
-```powershell
-cd "c:\Users\herna\Desktop\DevCareer AI"
-
-# Edita proxy.js primero: cambia "targetHost" al nuevo DNS del ALB externo
-# targetHost = 'devcareer-dev-alb-ext-XXXXXXXX.us-east-1.elb.amazonaws.com'
-
-node proxy.js
-```
-
-Deberías ver: `Proxy server listening on port 8080 and forwarding to devcareer-dev-alb-ext-...`
-
-### 8.2 — Crear el túnel HTTPS (Terminal 2)
-
-Abre una **segunda terminal** y ejecuta:
-
-```powershell
-ssh -o StrictHostKeyChecking=no -R 80:localhost:8080 nokey@localhost.run
-```
-
-La terminal imprimirá una URL HTTPS del tipo:
-```
-xxxxxxxxxxxxxx.lhr.life tunneled with tls termination, https://xxxxxxxxxxxxxx.lhr.life
-```
-
-**Copia esa URL** (la que empieza por `https://`).
-
-### 8.3 — Actualizar la URL del Webhook en el Dashboard de Vapi
-
-1. Ve a [dashboard.vapi.ai](https://dashboard.vapi.ai) → **Tools** → `getUserData`
-2. En el campo **Request URL** pon:
-   ```
-   https://xxxxxxxxxxxxxx.lhr.life/api/proxy/api/vapi/generate
-   ```
-   *(reemplaza `xxxxxxxxxxxxxx` con el subdominio que te dio el túnel en el paso anterior)*
-3. Haz clic en **Save**
-
-### 8.4 — Habilitar micrófono en el navegador
-
-Como la URL del lab sigue siendo HTTP, el navegador bloquea el micrófono. Configura una excepción una sola vez:
-
-1. En Chrome/Brave, abre: `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
-2. Pega la URL del frontend: `http://<frontend_alb_dns>`
-3. Cambia a **Enabled** y haz clic en **Relaunch**
-
----
-
-## ✅ ¡Listo! Flujo completo de la app
-
-Una vez completados todos los pasos, la app estará disponible y funcional:
-
-```
-Usuario (navegador)
-  → http://<frontend_alb_dns>               (interfaz Next.js)
-  → /api/proxy → Backend Express            (autenticación, entrevistas, feedback)
-  → DynamoDB                                (persistencia de datos)
-
-Vapi (entrevista de voz)
-  → https://xxxxx.lhr.life                  (túnel HTTPS seguro)
-  → proxy.js (puerto 8080)                  (proxy local)
-  → http://<frontend_alb_dns>/api/proxy/api/vapi/generate
-  → Backend Express → Gemini AI             (generación de preguntas)
-```
-
----
-
-## 📊 Resumen: ¿Qué cambia con cada nuevo lab?
-
-| Componente              | ¿Necesita actualizarse? | Qué hacer                                          |
-|-------------------------|-------------------------|----------------------------------------------------|
-| **Credenciales AWS**    | ✅ Siempre              | Actualizar las 3 líneas en `terraform.tfvars`      |
-| **tfstate**             | ✅ Siempre              | Borrar ambos archivos `.tfstate`                   |
-| **Frontend (imagen)**   | ✅ Siempre              | Rebuild con nuevo DNS + subir tag nuevo a Docker   |
-| **Backend (imagen)**    | ❌ Nunca                | Usa IAM Role (no tiene credenciales hardcoded)     |
-| **DynamoDB tablas**     | ❌ Nunca                | Se crean desde cero con Terraform automáticamente  |
-| **proxy.js**            | ✅ Siempre              | Actualizar el `targetHost` con el nuevo DNS del ALB |
-| **URL Webhook en Vapi** | ✅ Siempre              | Actualizar con la nueva URL del túnel HTTPS        |
-
----
-
-## ⚡ Comandos Rápidos (Cheat Sheet)
-
-```powershell
-# 1. Limpiar estado
-Remove-Item -Path "terraform-aws\terraform.tfstate", "terraform-aws\terraform.tfstate.backup" -Force -ErrorAction SilentlyContinue
-
-# 2. Aplicar infraestructura
-cd "c:\Users\herna\Desktop\DevCareer AI\terraform-aws"
-terraform apply -auto-approve
-
-# 3. Build del frontend (reemplaza <DNS> y <VERSION>)
-cd "c:\Users\herna\Desktop\DevCareer AI\frontend"
-docker build --build-arg NEXT_PUBLIC_API_URL=http://<DNS> --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="AIzaSyCsScqZzOIxRpf9uCuWZuRNk8MywsQyPSc" --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="prepwise-614c4.firebaseapp.com" --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="prepwise-614c4" --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET="prepwise-614c4.firebasestorage.app" --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID="198075807525" --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="1:198075807525:web:7bfc6a49a1e35a61968ccc" --build-arg NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="G-LV8MJSQCZT" --build-arg NEXT_PUBLIC_VAPI_WEB_TOKEN="76e26462-fbaa-43ed-a7ad-2afad444677d" --build-arg NEXT_PUBLIC_VAPI_WORKFLOW_ID="ab2a7208-e677-4952-95e9-05108448a006" -t hernang09/devcareer-frontend:<VERSION> .
-docker push hernang09/devcareer-frontend:<VERSION>
-
-# 4. Redesplegar con nuevo tag
-cd "c:\Users\herna\Desktop\DevCareer AI\terraform-aws"
-terraform apply -auto-approve
-
-# 5. Túnel HTTPS (en dos terminales separadas)
-# Terminal 1:
-node "c:\Users\herna\Desktop\DevCareer AI\proxy.js"
-# Terminal 2:
-ssh -o StrictHostKeyChecking=no -R 80:localhost:8080 nokey@localhost.run
 ```

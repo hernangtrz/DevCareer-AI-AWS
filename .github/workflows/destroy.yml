@@ -1,0 +1,97 @@
+name: Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy:
+    name: 🗑️ Destroy AWS Resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+          terraform_wrapper: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      # Descargar el estado de la ejecución anterior
+      - name: Download Terraform State
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Buscando estado de Terraform..."
+          gh run download --name terraform-state --dir terraform-aws || echo "No se encontró estado de Terraform en GitHub."
+
+      - name: Generate Base terraform.tfvars
+        run: |
+          cat <<EOF > terraform-aws/terraform.tfvars
+          aws_region   = "us-east-1"
+          project_name = "devcareer"
+          environment  = "dev"
+          
+          vpc_cidr           = "10.0.0.0/16"
+          availability_zones = ["us-east-1a", "us-east-1b"]
+          public_subnets     = ["10.0.1.0/24", "10.0.2.0/24"]
+          private_subnets    = ["10.0.10.0/24", "10.0.11.0/24"]
+          database_subnets   = ["10.0.20.0/24", "10.0.21.0/24"]
+          
+          backend_image  = "hernang09/devcareer-backend:v2"
+          
+          frontend_cpu           = 256
+          frontend_memory        = 512
+          backend_cpu            = 256
+          backend_memory         = 512
+          frontend_desired_count = 1
+          backend_desired_count  = 1
+          
+          port     = "3001"
+          node_env = "production"
+          
+          dynamo_table_users      = "devcareer_users"
+          dynamo_table_interviews = "devcareer_interviews"
+          dynamo_table_feedback   = "devcareer_feedback"
+          EOF
+
+      - name: Terraform Init & Destroy
+        env:
+          TF_VAR_aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_aws_session_token: ${{ secrets.AWS_SESSION_TOKEN }}
+          TF_VAR_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
+          TF_VAR_firebase_client_email: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          TF_VAR_firebase_private_key: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          TF_VAR_next_public_firebase_api_key: ${{ secrets.FIREBASE_API_KEY }}
+          TF_VAR_next_public_firebase_auth_domain: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          TF_VAR_next_public_firebase_project_id: ${{ secrets.FIREBASE_PROJECT_ID }}
+          TF_VAR_next_public_firebase_storage_bucket: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          TF_VAR_next_public_firebase_messaging_sender_id: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          TF_VAR_next_public_firebase_app_id: ${{ secrets.FIREBASE_APP_ID }}
+          TF_VAR_next_public_firebase_measurement_id: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
+          TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
+        run: |
+          cd terraform-aws
+          terraform init
+          terraform destroy -auto-approve
+
+      # Subir estado vacío o borrar el artefacto
+      - name: Upload Empty State to Reset
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-state
+          path: |
+            terraform-aws/terraform.tfstate
+            terraform-aws/terraform.tfstate.backup
