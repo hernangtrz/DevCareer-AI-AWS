@@ -3,7 +3,8 @@ import Image from "next/image";
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { Mic, FileText, Search } from "lucide-react";
-import { isAuthenticated } from "@/lib/api.server";
+import { isAuthenticated, getCurrentUser } from "@/lib/api.server";
+import UserMenu from "@/components/UserMenu";
 
 const navLinks = [
   { href: "/dashboard", label: "Entrevistas", icon: <Mic className="h-4 w-4" />, badge: null },
@@ -12,9 +13,11 @@ const navLinks = [
 ];
 
 const Layout = async ({ children }: { children: ReactNode }) => {
+  let user = null;
   try {
     const isUserAuthenticated = await isAuthenticated();
     if (!isUserAuthenticated) redirect("/sign-in");
+    user = await getCurrentUser();
   } catch {
     // Si el backend no responde, redirigir al login por seguridad
     redirect("/sign-in");
@@ -43,6 +46,9 @@ const Layout = async ({ children }: { children: ReactNode }) => {
               )}
             </Link>
           ))}
+          <div className="ml-2">
+            <UserMenu name={user?.name ?? "Usuario"} email={user?.email} />
+          </div>
         </div>
       </nav>
       {children}
