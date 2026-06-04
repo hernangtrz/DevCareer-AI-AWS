@@ -14,6 +14,7 @@ enum CallStatus {
   CONNECTING = "CONNECTING",
   ACTIVE = "ACTIVE",
   FINISHED = "FINISHED",
+  GENERATING_FEEDBACK = "GENERATING_FEEDBACK",
 }
 
 interface SavedMessage {
@@ -68,6 +69,7 @@ const Agent = ({
 
   const handleGenerateFeedback = async (msgs: SavedMessage[]) => {
     console.log("Generate feedback here.");
+    setCallStatus(CallStatus.GENERATING_FEEDBACK);
 
     try {
       // Obtener ID Token de Cognito desde localStorage
@@ -139,6 +141,49 @@ const Agent = ({
   const latestMessage = messages[messages.length - 1]?.content;
   const isCallInactiveOrFinished =
     callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
+
+  // --- Pantalla de carga de feedback ---
+  if (callStatus === CallStatus.GENERATING_FEEDBACK) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-8 py-16">
+        {/* Spinner animado */}
+        <div className="relative flex items-center justify-center">
+          <div className="w-24 h-24 rounded-full border-4 border-dark-200 border-t-primary-200 animate-spin" />
+          <div className="absolute w-16 h-16 rounded-full border-4 border-dark-200 border-b-primary-200 animate-spin" style={{ animationDirection: "reverse", animationDuration: "0.9s" }} />
+        </div>
+
+        {/* Texto de estado */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <h3 className="text-primary-100 text-xl font-semibold">
+            Analizando tu entrevista...
+          </h3>
+          <p className="text-light-400 text-sm max-w-sm">
+            Estamos generando tu retroalimentación personalizada.
+            <br />
+            <span className="text-primary-200 font-medium">Por favor no cierres esta página.</span>
+          </p>
+        </div>
+
+        {/* Barra de progreso indeterminada */}
+        <div className="w-64 h-1.5 bg-dark-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary-200 rounded-full"
+            style={{
+              animation: "feedback-progress 2s ease-in-out infinite",
+            }}
+          />
+        </div>
+
+        <style jsx>{`
+          @keyframes feedback-progress {
+            0%   { width: 0%;   margin-left: 0%; }
+            50%  { width: 70%;  margin-left: 15%; }
+            100% { width: 0%;   margin-left: 100%; }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <>

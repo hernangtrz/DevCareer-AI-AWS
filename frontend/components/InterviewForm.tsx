@@ -21,12 +21,13 @@ const TYPES = [
   { value: "conductual", label: "Conductual" },
   { value: "combinada", label: "Combinada" },
 ] as const;
-const AMOUNTS = [5, 8, 10, 15];
+const AMOUNTS = [2, 5, 8, 10, 15];
 
 const InterviewForm = ({ userId }: InterviewFormProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
   const [form, setForm] = useState<InterviewFormData>({
     role: "",
     techstack: "",
@@ -149,13 +150,16 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
             <label className="text-sm text-light-100 font-medium">
               Número de preguntas
             </label>
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex gap-3 flex-wrap items-center">
               {AMOUNTS.map((n) => (
                 <button
                   key={n}
-                  onClick={() => setForm({ ...form, amount: n })}
+                  onClick={() => {
+                    setCustomAmount("");
+                    setForm({ ...form, amount: n });
+                  }}
                   className={`w-12 h-12 rounded-full text-sm font-bold border transition-all cursor-pointer ${
-                    form.amount === n
+                    form.amount === n && customAmount === ""
                       ? "bg-primary-200 text-dark-100 border-primary-200"
                       : "bg-dark-200 text-light-100 border-input hover:border-primary-200"
                   }`}
@@ -163,7 +167,26 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
                   {n}
                 </button>
               ))}
+              <div className="flex flex-col gap-1">
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  placeholder="Otro"
+                  value={customAmount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCustomAmount(val);
+                    const num = parseInt(val, 10);
+                    if (!isNaN(num) && num >= 1 && num <= 30) {
+                      setForm({ ...form, amount: num });
+                    }
+                  }}
+                  className="w-20 h-12 rounded-full text-sm font-bold border border-input bg-dark-200 text-white text-center placeholder:text-light-600 focus:outline-none focus:border-primary-200 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
             </div>
+            <p className="text-xs text-light-600">Elige una opción o escribe entre 1 y 30 preguntas.</p>
           </div>
 
           {/* Error */}
