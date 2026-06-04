@@ -101,6 +101,23 @@ export const interviewer: CreateAssistantDTO = {
   name: "Entrevistador",
   firstMessage:
     "¡Hola! Gracias por dedicar tiempo a esta entrevista. Estoy interesado en conocer más sobre ti y tu experiencia.",
+  firstMessageMode: "assistant-speaks-first",
+  firstMessageInterruptionsEnabled: true,
+  backgroundSound: "off",
+  backgroundSpeechDenoisingPlan: {
+    smartDenoisingPlan: {
+      enabled: true,
+    },
+  },
+  startSpeakingPlan: {
+    waitSeconds: 0.4,
+  },
+  stopSpeakingPlan: {
+    numWords: 0,
+    voiceSeconds: 0.2,
+    backoffSeconds: 0.8,
+  },
+  maxDurationSeconds: 900,
   transcriber: {
     provider: "deepgram",
     model: "nova-3",
@@ -115,7 +132,7 @@ export const interviewer: CreateAssistantDTO = {
   },
   model: {
     provider: "openai",
-    model: "gpt-4",
+    model: "gpt-4o-mini",
     messages: [
       {
         role: "system",
