@@ -90,4 +90,69 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
   }
 });
 
+// POST /api/cv/improve-profile - Optimizar redacción del perfil profesional (Acerca de mí) con Gemini AI
+router.post("/improve-profile", async (req: Request, res: Response): Promise<void> => {
+  const { profileText, targetRole, language } = req.body;
+
+  try {
+    const prompt = `Actúa como un reclutador experto y redactor profesional de CVs.
+Tu tarea es perfeccionar el "Perfil Profesional" (también llamado "Acerca de mí" o "Resumen Ejecutivo") de un candidato para que sea atractivo, profesional, use un tono formal y esté alineado con el rol objetivo: "${targetRole || "Profesional TI"}".
+
+El idioma de salida del párrafo resultante debe ser: ${language === "en" ? "Inglés (English)" : "Español (Spanish)"}.
+
+Aquí está el texto de perfil actual provisto por el usuario:
+"${profileText || ""}"
+
+Instrucciones:
+1. Mejora la gramática, redacción, vocabulario y fluidez profesional.
+2. Hazlo sonar motivador, dinámico y con palabras clave que encajen con el rol objetivo "${targetRole}".
+3. Debe ser un único párrafo conciso (entre 3 y 5 oraciones, máximo 120 palabras).
+4. No agregues certificaciones o estudios específicos que no se mencionen en el texto original, mantén la fidelidad a los hechos reales.
+
+Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques de código, sin markdown, sin backticks:
+{
+  "refinedProfile": "Párrafo de perfil profesional mejorado en el idioma solicitado"
+}`;
+
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey) {
+      throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
+    }
+
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+
+    const geminiRes = await fetch(apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.6,
+          responseMimeType: "application/json"
+        },
+      }),
+    });
+
+    if (!geminiRes.ok) {
+      throw new Error(`Error de Gemini API: ${geminiRes.status} ${geminiRes.statusText}`);
+    }
+
+    const geminiData = await geminiRes.json() as any;
+    const rawText: string = geminiData.candidates[0].content.parts[0].text;
+    const cleanText = rawText.replace(/```json|```/g, "").trim();
+    const result = JSON.parse(cleanText);
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error("Error optimizando perfil de CV con Gemini:", error?.message || error);
+    res.status(500).json({
+      success: false,
+      message: error?.message || "Ocurrió un error al procesar la optimización del perfil."
+    });
+  }
+});
+
 export default router;

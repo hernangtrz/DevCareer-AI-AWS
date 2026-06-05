@@ -346,7 +346,7 @@
     color: black !important;
   }
 
-  body > *:not(.cv-print-only) {
+  .no-print {
     display: none !important;
   }
 

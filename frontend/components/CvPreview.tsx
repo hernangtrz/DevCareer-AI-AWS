@@ -34,6 +34,8 @@ interface CvPreviewProps {
   skills: string[];
   education: Education[];
   isPrint?: boolean;
+  photoUrl?: string;
+  profileText?: string;
 }
 
 const CvPreview = ({
@@ -44,6 +46,8 @@ const CvPreview = ({
   skills,
   education,
   isPrint = false,
+  photoUrl,
+  profileText,
 }: CvPreviewProps) => {
   const isModern = templateId === "moderno" || templateId === "creativo";
   const iconClass = isPrint ? "h-3.5 w-3.5" : "h-1.5 w-1.5";
@@ -73,15 +77,26 @@ const CvPreview = ({
           )}
           style={{ background: accentColor }}
         >
-          {/* Avatar placeholder */}
-          <div
-            className={cn(
-              "rounded-full bg-white/20 mx-auto flex items-center justify-center text-white/60",
-              isPrint ? "w-20 h-20 text-lg mb-2" : "w-12 h-12 text-[8px] mb-1"
-            )}
-          >
-            {personalInfo.name ? personalInfo.name.charAt(0).toUpperCase() : "U"}
-          </div>
+          {/* Avatar placeholder / Photo */}
+          {photoUrl ? (
+            <div
+              className={cn(
+                "rounded-full bg-white/20 mx-auto overflow-hidden flex items-center justify-center border-2 border-white/40",
+                isPrint ? "w-20 h-20 mb-2" : "w-12 h-12 mb-1"
+              )}
+            >
+              <img src={photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "rounded-full bg-white/20 mx-auto flex items-center justify-center text-white/60",
+                isPrint ? "w-20 h-20 text-lg mb-2" : "w-12 h-12 text-[8px] mb-1"
+              )}
+            >
+              {personalInfo.name ? personalInfo.name.charAt(0).toUpperCase() : "U"}
+            </div>
+          )}
 
           <div className="text-center">
             <p
@@ -156,35 +171,62 @@ const CvPreview = ({
         {/* Header (classic/ATS only) */}
         {!isModern && (
           <div
-            className="pb-2.5 mb-1.5"
+            className="pb-2.5 mb-1.5 flex gap-4 items-center"
             style={{ borderBottom: `2px solid ${accentColor}` }}
           >
-            <p
-              className="font-bold leading-tight"
-              style={{ color: accentColor, fontSize: "1.5em" }}
-            >
-              {personalInfo.name || "Tu Nombre Completo"}
-            </p>
-            <p className="text-gray-500 font-medium" style={{ fontSize: "1em" }}>
-              {personalInfo.headline || "Título Profesional"}
-            </p>
-            <div className="flex gap-3 mt-1.5 flex-wrap">
-              {personalInfo.email && (
-                <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
-                  <Mail className={iconClass} /> {personalInfo.email}
-                </span>
-              )}
-              {personalInfo.phone && (
-                <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
-                  <Phone className={iconClass} /> {personalInfo.phone}
-                </span>
-              )}
-              {personalInfo.location && (
-                <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
-                  <MapPin className={iconClass} /> {personalInfo.location}
-                </span>
-              )}
+            {photoUrl && (
+              <div
+                className={cn(
+                  "rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 bg-gray-50",
+                  isPrint ? "w-20 h-24" : "w-12 h-14"
+                )}
+              >
+                <img src={photoUrl} alt="Foto de perfil" className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1">
+              <p
+                className="font-bold leading-tight"
+                style={{ color: accentColor, fontSize: "1.5em" }}
+              >
+                {personalInfo.name || "Tu Nombre Completo"}
+              </p>
+              <p className="text-gray-500 font-medium" style={{ fontSize: "1em" }}>
+                {personalInfo.headline || "Título Profesional"}
+              </p>
+              <div className="flex gap-3 mt-1.5 flex-wrap">
+                {personalInfo.email && (
+                  <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
+                    <Mail className={iconClass} /> {personalInfo.email}
+                  </span>
+                )}
+                {personalInfo.phone && (
+                  <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
+                    <Phone className={iconClass} /> {personalInfo.phone}
+                  </span>
+                )}
+                {personalInfo.location && (
+                  <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
+                    <MapPin className={iconClass} /> {personalInfo.location}
+                  </span>
+                )}
+              </div>
             </div>
+          </div>
+        )}
+
+        {/* Profile (Acerca de mí / Resumen) */}
+        {profileText && (
+          <div>
+            <p
+              className="font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5"
+              style={{ color: accentColor, fontSize: "1.1em" }}
+            >
+              Perfil
+            </p>
+            <p className="text-gray-600 text-justify" style={{ fontSize: "0.85em", lineHeight: "1.4" }}>
+              {profileText}
+            </p>
           </div>
         )}
 
@@ -193,7 +235,7 @@ const CvPreview = ({
           <div>
             <p
               className="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
-              style={{ color: accentColor, fontSize: "1em" }}
+              style={{ color: accentColor, fontSize: "1.1em" }}
             >
               <Briefcase className={iconClass} /> Experiencia
             </p>
@@ -229,7 +271,7 @@ const CvPreview = ({
           <div>
             <p
               className="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
-              style={{ color: accentColor, fontSize: "1em" }}
+              style={{ color: accentColor, fontSize: "1.1em" }}
             >
               <GraduationCap className={iconClass} /> Educación
             </p>
@@ -256,7 +298,7 @@ const CvPreview = ({
           <div>
             <p
               className="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
-              style={{ color: accentColor, fontSize: "1em" }}
+              style={{ color: accentColor, fontSize: "1.1em" }}
             >
               <Code className={iconClass} /> Habilidades
             </p>
