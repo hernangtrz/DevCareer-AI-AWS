@@ -93,7 +93,7 @@ jobs:
           private_subnets    = ["10.0.10.0/24", "10.0.11.0/24"]
           database_subnets   = ["10.0.20.0/24", "10.0.21.0/24"]
           
-          backend_image  = "hernang09/devcareer-backend:v2"
+          backend_image  = "hernang09/devcareer-backend:v3"
           
           frontend_cpu           = 256
           frontend_memory        = 512
@@ -196,7 +196,9 @@ jobs:
         with:
           context: ./Backend
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:v3
 
   # ────────────────────────────────────────────────────────────────────────────
   # FASE 3: Actualizar ECS Fargate con la nueva versión del Frontend y Backend
