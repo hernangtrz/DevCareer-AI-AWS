@@ -334,6 +334,11 @@
 }
 
 /* ─── Estilos de Impresión para Exportar CV a PDF ─── */
+@page {
+  size: A4;
+  margin: 0 !important;
+}
+
 @media screen {
   .cv-print-only {
     display: none !important;
@@ -341,7 +346,11 @@
 }
 
 @media print {
-  body {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    height: auto !important;
     background: white !important;
     color: black !important;
   }
@@ -352,16 +361,13 @@
 
   .cv-print-only {
     display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
     width: 210mm !important;
-    height: 297mm !important;
+    min-height: 297mm !important;
+    height: auto !important;
     margin: 0 !important;
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
-    z-index: 99999;
   }
 
   * {

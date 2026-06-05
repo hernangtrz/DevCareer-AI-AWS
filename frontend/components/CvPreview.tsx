@@ -71,7 +71,7 @@ const sz = (isPrint: boolean) => ({
 const TemplateProfesional = ({ personalInfo, experiences, skills, education, isPrint, photoUrl, profileText, accentColor }: CvPreviewProps) => {
   const s = sz(isPrint!);
   return (
-    <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.45, color: "#1a1a1a", width: "100%", height: "100%", padding: isPrint ? "32px 36px" : "10px 12px", boxSizing: "border-box", background: "#fff" }}>
+    <div style={{ fontFamily: "Georgia, 'Times New Roman', serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.45, color: "#1a1a1a", width: "100%", height: isPrint ? "auto" : "100%", minHeight: isPrint ? "297mm" : "100%", padding: isPrint ? "32px 36px" : "10px 12px", boxSizing: "border-box", background: "#fff" }}>
       {/* Header strip */}
       <div style={{ borderBottom: `3px solid ${accentColor}`, paddingBottom: isPrint ? "14px" : "6px", marginBottom: isPrint ? "14px" : "6px", display: "flex", gap: isPrint ? "16px" : "8px", alignItems: "flex-start" }}>
         {photoUrl && (
@@ -152,7 +152,7 @@ const TemplateEjecutivo = ({ personalInfo, experiences, skills, education, isPri
   const s = sz(isPrint!);
   const darkBg = accentColor;
   return (
-    <div style={{ fontFamily: "'Arial', Helvetica, sans-serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.5, color: "#2d2d2d", width: "100%", height: "100%", boxSizing: "border-box", background: "#fafafa" }}>
+    <div style={{ fontFamily: "'Arial', Helvetica, sans-serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.5, color: "#2d2d2d", width: "100%", height: isPrint ? "auto" : "100%", minHeight: isPrint ? "297mm" : "100%", boxSizing: "border-box", background: "#fafafa" }}>
       {/* Full-width dark header */}
       <div style={{ background: darkBg, padding: isPrint ? "24px 36px" : "10px 14px", display: "flex", alignItems: "center", gap: isPrint ? "20px" : "8px" }}>
         {photoUrl && (
@@ -236,7 +236,7 @@ const TemplateEjecutivo = ({ personalInfo, experiences, skills, education, isPri
 const TemplateModerno = ({ personalInfo, experiences, skills, education, isPrint, photoUrl, profileText, accentColor }: CvPreviewProps) => {
   const s = sz(isPrint!);
   return (
-    <div style={{ fontFamily: "'Arial', Helvetica, sans-serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.45, color: "#1a1a1a", width: "100%", height: "100%", boxSizing: "border-box", background: "#fff", display: "flex" }}>
+    <div style={{ fontFamily: "'Arial', Helvetica, sans-serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.45, color: "#1a1a1a", width: "100%", height: isPrint ? "auto" : "100%", minHeight: isPrint ? "297mm" : "100%", boxSizing: "border-box", background: "#fff", display: "flex" }}>
       {/* Sidebar */}
       <div style={{ width: "36%", background: accentColor, color: "#fff", padding: isPrint ? "28px 18px" : "10px 8px", display: "flex", flexDirection: "column", gap: isPrint ? "16px" : "7px" }}>
         {photoUrl ? (
@@ -321,36 +321,36 @@ const TemplateModerno = ({ personalInfo, experiences, skills, education, isPrint
 const TemplateAts = ({ personalInfo, experiences, skills, education, isPrint, profileText }: CvPreviewProps) => {
   const s = sz(isPrint!);
   return (
-    <div style={{ fontFamily: "'Arial', Helvetica, sans-serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.6, color: "#000", width: "100%", height: "100%", padding: isPrint ? "28px 36px" : "8px 12px", boxSizing: "border-box", background: "#fff" }}>
+    <div style={{ fontFamily: "'Arial', Helvetica, sans-serif", fontSize: isPrint ? "11pt" : "7px", lineHeight: 1.6, color: "#000", width: "100%", height: isPrint ? "auto" : "100%", minHeight: isPrint ? "297mm" : "100%", padding: isPrint ? "28px 36px" : "8px 12px", boxSizing: "border-box", background: "#fff" }}>
       {/* Header: plain text, no colors */}
-      <div style={{ textAlign: "center", marginBottom: isPrint ? "10px" : "5px", borderBottom: "1px solid #000", paddingBottom: isPrint ? "8px" : "4px" }}>
-        <div style={{ fontSize: isPrint ? "18pt" : "1.2em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>{personalInfo.name || "TU NOMBRE COMPLETO"}</div>
-        <div style={{ fontSize: s.section, fontWeight: 600, marginTop: isPrint ? "2px" : "1px" }}>{personalInfo.headline || "Título Profesional"}</div>
-        <div style={{ fontSize: s.small, marginTop: isPrint ? "4px" : "2px", display: "flex", justifyContent: "center", flexWrap: "wrap", gap: isPrint ? "12px" : "5px" }}>
-          {personalInfo.email && <span>{personalInfo.email}</span>}
-          {personalInfo.phone && <span>| {personalInfo.phone}</span>}
-          {personalInfo.location && <span>| {personalInfo.location}</span>}
-          {personalInfo.linkedin && <span>| {personalInfo.linkedin}</span>}
+      <div style={{ textAlign: "center", marginBottom: isPrint ? "10px" : "5px", borderBottom: "1px solid #000", paddingBottom: isPrint ? "8px" : "4px", color: "#000" }}>
+        <div style={{ fontSize: isPrint ? "18pt" : "1.2em", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#000" }}>{personalInfo.name || "TU NOMBRE COMPLETO"}</div>
+        <div style={{ fontSize: s.section, fontWeight: 600, marginTop: isPrint ? "2px" : "1px", color: "#000" }}>{personalInfo.headline || "Título Profesional"}</div>
+        <div style={{ fontSize: s.small, marginTop: isPrint ? "4px" : "2px", display: "flex", justifyContent: "center", flexWrap: "wrap", gap: isPrint ? "12px" : "5px", color: "#000" }}>
+          {personalInfo.email && <span style={{ color: "#000" }}>{personalInfo.email}</span>}
+          {personalInfo.phone && <span style={{ color: "#000" }}>| {personalInfo.phone}</span>}
+          {personalInfo.location && <span style={{ color: "#000" }}>| {personalInfo.location}</span>}
+          {personalInfo.linkedin && <span style={{ color: "#000" }}>| {personalInfo.linkedin}</span>}
         </div>
       </div>
 
       {profileText && (
         <AtsSection title="RESUMEN PROFESIONAL" isPrint={isPrint!}>
-          <p style={{ fontSize: s.body, lineHeight: 1.6 }}>{profileText}</p>
+          <p style={{ fontSize: s.body, lineHeight: 1.6, color: "#000" }}>{profileText}</p>
         </AtsSection>
       )}
 
       {experiences.filter(e => e.company || e.role).length > 0 && (
         <AtsSection title="EXPERIENCIA PROFESIONAL" isPrint={isPrint!}>
           {experiences.filter(e => e.company || e.role).map((exp, i) => (
-            <div key={i} style={{ marginBottom: isPrint ? "10px" : "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <strong style={{ fontSize: s.section }}>{exp.role || "Cargo"}</strong>
-                <span style={{ fontSize: s.small }}>{exp.startDate}{exp.endDate ? ` - ${exp.endDate}` : " - Presente"}</span>
+            <div key={i} style={{ marginBottom: isPrint ? "10px" : "4px", color: "#000" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", color: "#000" }}>
+                <strong style={{ fontSize: s.section, color: "#000" }}>{exp.role || "Cargo"}</strong>
+                <span style={{ fontSize: s.small, color: "#000" }}>{exp.startDate}{exp.endDate ? ` - ${exp.endDate}` : " - Presente"}</span>
               </div>
-              <div style={{ fontSize: s.small, fontWeight: 600 }}>{exp.company}</div>
+              <div style={{ fontSize: s.small, fontWeight: 600, color: "#000" }}>{exp.company}</div>
               {exp.bullets.filter(Boolean).map((b, bi) => (
-                <div key={bi} style={{ fontSize: s.body, paddingLeft: isPrint ? "12px" : "5px" }}>- {b}</div>
+                <div key={bi} style={{ fontSize: s.body, paddingLeft: isPrint ? "12px" : "5px", color: "#000" }}>- {b}</div>
               ))}
             </div>
           ))}
@@ -360,12 +360,12 @@ const TemplateAts = ({ personalInfo, experiences, skills, education, isPrint, pr
       {education.filter(e => e.institution || e.degree).length > 0 && (
         <AtsSection title="EDUCACIÓN" isPrint={isPrint!}>
           {education.filter(e => e.institution || e.degree).map((edu, i) => (
-            <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: isPrint ? "4px" : "2px" }}>
-              <div>
-                <strong style={{ fontSize: s.section }}>{edu.degree}</strong>
-                <div style={{ fontSize: s.small }}>{edu.institution}</div>
+            <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: isPrint ? "4px" : "2px", color: "#000" }}>
+              <div style={{ color: "#000" }}>
+                <strong style={{ fontSize: s.section, color: "#000" }}>{edu.degree}</strong>
+                <div style={{ fontSize: s.small, color: "#000" }}>{edu.institution}</div>
               </div>
-              <span style={{ fontSize: s.small }}>{edu.year}</span>
+              <span style={{ fontSize: s.small, color: "#000" }}>{edu.year}</span>
             </div>
           ))}
         </AtsSection>
@@ -373,7 +373,7 @@ const TemplateAts = ({ personalInfo, experiences, skills, education, isPrint, pr
 
       {skills.length > 0 && (
         <AtsSection title="HABILIDADES TÉCNICAS" isPrint={isPrint!}>
-          <p style={{ fontSize: s.body }}>{skills.join(" | ")}</p>
+          <p style={{ fontSize: s.body, color: "#000" }}>{skills.join(" | ")}</p>
         </AtsSection>
       )}
 
@@ -406,8 +406,8 @@ const ModernSectionTitle = ({ title, accent, isPrint }: { title: string; accent:
 );
 
 const AtsSection = ({ title, isPrint, children }: { title: string; isPrint: boolean; children: React.ReactNode }) => (
-  <div style={{ marginBottom: isPrint ? "10px" : "4px" }}>
-    <div style={{ fontSize: isPrint ? "9pt" : "0.7em", fontWeight: 700, textTransform: "uppercase", borderBottom: "1px solid #000", paddingBottom: isPrint ? "2px" : "1px", marginBottom: isPrint ? "5px" : "2px" }}>{title}</div>
+  <div style={{ marginBottom: isPrint ? "10px" : "4px", color: "#000" }}>
+    <div style={{ fontSize: isPrint ? "9pt" : "0.7em", fontWeight: 700, textTransform: "uppercase", borderBottom: "1px solid #000", paddingBottom: isPrint ? "2px" : "1px", marginBottom: isPrint ? "5px" : "2px", color: "#000" }}>{title}</div>
     {children}
   </div>
 );
