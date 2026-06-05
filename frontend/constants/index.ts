@@ -119,8 +119,8 @@ export const interviewer: CreateAssistantDTO = {
   },
   maxDurationSeconds: 900,
   transcriber: {
-    provider: "deepgram",
-    model: "nova-3",
+    provider: "openai",
+    model: "gpt-4o-transcribe",
     language: "es",
   },
   voice: {
@@ -132,7 +132,7 @@ export const interviewer: CreateAssistantDTO = {
   },
   model: {
     provider: "openai",
-    model: "gpt-4o-mini",
+    model: "gpt-realtime-2025-08-28",
     messages: [
       {
         role: "system",
