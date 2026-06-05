@@ -119,14 +119,16 @@ export const interviewer: CreateAssistantDTO = {
   },
   maxDurationSeconds: 900,
   transcriber: {
-    provider: "deepgram",
-    model: "nova-2-general", // Más estable y preciso para español conversacional
+    provider: "openai",
+    model: "gpt-4o-transcribe",
     language: "es",
   },
   voice: {
-    provider: "cartesia",
-    voiceId: "57dcab65-68ac-45a6-8480-6c4c52ec1cd1", // Voz Kira (cálida y conversacional)
-    model: "sonic-3", // Modelo multilingüe ultra rápido
+    provider: "11labs",
+    voiceId: "21m00Tcm4TlvDq8ikWAM", // ID de la voz (ej: Antoni)
+    model: "eleven_multilingual_v2", // Muy importante usar v2 para español nativo
+    stability: 0.5,
+    similarityBoost: 0.75,
   },
   model: {
     provider: "openai",
