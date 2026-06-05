@@ -4,35 +4,43 @@ const router = Router();
 
 // POST /api/cv/improve - Optimizar hoja de vida con Gemini AI
 router.post("/improve", async (req: Request, res: Response): Promise<void> => {
-  const { personalInfo, experiences, skills, education, targetRole, language } = req.body;
+  const { personalInfo, experiences, skills, education, targetRole, language, profileText, translate } = req.body;
 
   try {
+    const langName = language === "en" ? "English (Inglés)" : "Spanish (Español)";
+    const translateNote = translate
+      ? `IMPORTANTE: El usuario ha cambiado el idioma del CV a ${langName}. Debes TRADUCIR TODO el contenido al ${langName}, incluyendo los bullets de experiencia, habilidades, perfil, títulos de cargo y educación.`
+      : `El idioma de salida de todo el contenido debe ser: ${langName}.`;
+
     const prompt = `Actúa como un reclutador experto y escritor profesional de CVs optimizados para filtros ATS.
 Tu objetivo es optimizar los datos de la hoja de vida que te proporciono para el rol objetivo: "${targetRole || "Profesional TI"}".
 
-El idioma de salida de todo el contenido debe ser: ${language === "en" ? "Inglés (English)" : "Español (Spanish)"}.
+${translateNote}
 
 Aquí están los datos actuales del candidato:
 - Título profesional actual: "${personalInfo?.headline || ""}"
+- Perfil Profesional (Acerca de mí): "${profileText || ""}"
 - Experiencia laboral actual: ${JSON.stringify(experiences || [])}
 - Habilidades técnicas actuales: ${JSON.stringify(skills || [])}
 - Educación: ${JSON.stringify(education || [])}
 
-Realiza las siguientes mejoras:
-1. **Título profesional (headline)**: Reescríbelo para que sea de alto impacto, contenga palabras clave relevantes para el rol objetivo ("${targetRole}") y demuestre especialización.
-2. **Experiencia laboral (bullets)**: Reescribe los puntos (bullets) de responsabilidades/logros de cada experiencia utilizando verbos de acción fuertes al inicio y métricas de impacto implícitas o sugeridas si aplica. Si el candidato escribió puntos muy cortos o vacíos, expande creativamente sus logros de manera profesional y realista según el puesto y la empresa.
-3. **Habilidades técnicas (skills)**: Limpia la lista actual (corrige mayúsculas y nombres estándar, ej. "reactjs" -> "React", "nodejs" -> "Node.js"). Añade entre 3 y 5 habilidades adicionales de alta demanda que encajen directamente con el rol objetivo "${targetRole}" y el perfil del candidato.
-4. **Mantener consistencia**: No alteres los nombres de las empresas, fechas de inicio/fin ni la educación.
+Realiza las siguientes mejoras (en el idioma solicitado):
+1. **Título profesional (headline)**: Reescríbelo para que sea de alto impacto y contenga palabras clave para el rol "${targetRole}".
+2. **Perfil profesional**: Si está presente, mejora la redacción y tradúcelo al idioma solicitado.
+3. **Experiencia laboral (bullets)**: Reescribe los puntos usando verbos de acción fuertes. Si el usuario pidió traducción, tradúcelos también.
+4. **Habilidades técnicas (skills)**: Normaliza los nombres (ej. "reactjs" -> "React"). Si pidió traducción, traduce habilidades no técnicas (ej. "Trabajo en equipo" -> "Teamwork").
+5. **Mantener consistencia**: No alteres los nombres de las empresas ni las fechas.
 
 Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques de código, sin markdown, sin backticks:
 {
   "personalInfo": {
     "headline": "Título profesional optimizado en el idioma solicitado"
   },
+  "profileText": "Perfil profesional mejorado y traducido (vacío si no había texto original)",
   "experiences": [
     {
       "company": "Mismo nombre de empresa sin alterar",
-      "role": "Cargo optimizado si era impreciso",
+      "role": "Cargo traducido si aplica",
       "startDate": "Misma fecha de inicio",
       "endDate": "Misma fecha de fin",
       "bullets": [
@@ -42,10 +50,8 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
     }
   ],
   "skills": [
-    "Habilidad 1 estándar",
-    "Habilidad 2 estándar",
-    "Nueva Habilidad Sugerida 1",
-    "Nueva Habilidad Sugerida 2"
+    "Habilidad 1 estandarizada",
+    "Habilidad 2 estandarizada"
   ]
 }`;
 

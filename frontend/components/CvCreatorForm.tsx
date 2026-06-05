@@ -57,21 +57,21 @@ const TEMPLATES = [
     accentColor: "#1e40af",
   },
   {
-    id: "moderno",
-    name: "Moderno Minimalista",
-    description: "Sidebar lateral elegante y moderno",
-    accentColor: "#6366f1",
+    id: "ejecutivo",
+    name: "Ejecutivo",
+    description: "Elegante header centrado para gerentes y directivos",
+    accentColor: "#1a1a2e",
   },
   {
-    id: "creativo",
-    name: "Creativo",
-    description: "Destaca con un diseño dinámico",
-    accentColor: "#8b5cf6",
+    id: "moderno",
+    name: "Moderno con Sidebar",
+    description: "Sidebar lateral con foto y habilidades",
+    accentColor: "#6366f1",
   },
   {
     id: "ats",
     name: "ATS-Optimizado",
-    description: "Máxima compatibilidad con filtros ATS",
+    description: "Texto puro, máxima compatibilidad con filtros",
     accentColor: "#0f766e",
   },
 ];
@@ -116,6 +116,7 @@ const CvCreatorForm = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [skillInput, setSkillInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string>("");
   const [profileText, setProfileText] = useState<string>("");
@@ -215,7 +216,7 @@ const CvCreatorForm = () => {
   const handleGenerateWithAi = async () => {
     if (!targetRole.trim()) {
       toast.error("Por favor, ingresa tu rol objetivo en el paso 'Personalización' antes de optimizar con IA.");
-      setStep(3); // Ir al paso de personalización
+      setStep(3);
       return;
     }
 
@@ -237,27 +238,19 @@ const CvCreatorForm = () => {
           education,
           targetRole,
           language,
+          profileText,
         }),
       });
 
-      if (!res.ok) {
-        throw new Error("Error en la respuesta del servidor.");
-      }
+      if (!res.ok) throw new Error("Error en la respuesta del servidor.");
 
       const responseData = await res.json();
       if (responseData.success && responseData.data) {
-        const { personalInfo: newInfo, experiences: newExp, skills: newSkills } = responseData.data;
-        
-        if (newInfo?.headline) {
-          setPersonalInfo(prev => ({ ...prev, headline: newInfo.headline }));
-        }
-        if (Array.isArray(newExp)) {
-          setExperiences(newExp);
-        }
-        if (Array.isArray(newSkills)) {
-          setSkills(newSkills);
-        }
-        
+        const { personalInfo: newInfo, experiences: newExp, skills: newSkills, profileText: newProfile } = responseData.data;
+        if (newInfo?.headline) setPersonalInfo(prev => ({ ...prev, headline: newInfo.headline }));
+        if (Array.isArray(newExp)) setExperiences(newExp);
+        if (Array.isArray(newSkills)) setSkills(newSkills);
+        if (newProfile && newProfile.trim()) setProfileText(newProfile);
         toast.success("¡CV optimizado con éxito!", { id: toastId });
       } else {
         throw new Error("No se recibieron datos válidos.");
@@ -267,6 +260,58 @@ const CvCreatorForm = () => {
       toast.error("Hubo un error optimizando tu currículum. Inténtalo de nuevo.", { id: toastId });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleTranslateWithAi = async (newLang: "es" | "en") => {
+    const hasContent = personalInfo.name.trim() || experiences.some(e => e.bullets.some(b => b.trim())) || profileText.trim();
+    if (!hasContent) {
+      setLanguage(newLang);
+      return;
+    }
+
+    setIsTranslating(true);
+    const toastId = toast.loading(newLang === "en" ? "Traduciendo CV al inglés..." : "Traduciendo CV al español...");
+
+    try {
+      const apiUrl = typeof window !== "undefined"
+        ? "/api/proxy"
+        : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+      const res = await fetch(`${apiUrl}/api/cv/improve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalInfo,
+          experiences,
+          skills,
+          education,
+          targetRole: targetRole || personalInfo.headline || "Profesional",
+          language: newLang,
+          profileText,
+          translate: true,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Error en la respuesta del servidor.");
+
+      const responseData = await res.json();
+      if (responseData.success && responseData.data) {
+        const { personalInfo: newInfo, experiences: newExp, skills: newSkills, profileText: newProfile } = responseData.data;
+        if (newInfo?.headline) setPersonalInfo(prev => ({ ...prev, headline: newInfo.headline }));
+        if (Array.isArray(newExp)) setExperiences(newExp);
+        if (Array.isArray(newSkills)) setSkills(newSkills);
+        if (newProfile && newProfile.trim()) setProfileText(newProfile);
+        setLanguage(newLang);
+        toast.success(newLang === "en" ? "¡CV traducido al inglés!" : "¡CV traducido al español!", { id: toastId });
+      } else {
+        throw new Error("Sin datos válidos.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al traducir. Inténtalo de nuevo.", { id: toastId });
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -649,18 +694,24 @@ const CvCreatorForm = () => {
                 {(["es", "en"] as const).map((lang) => (
                   <button
                     key={lang}
-                    onClick={() => setLanguage(lang)}
+                    onClick={() => handleTranslateWithAi(lang)}
+                    disabled={isTranslating || language === lang}
                     className={cn(
-                      "px-5 py-2 rounded-full text-sm font-semibold border transition-all cursor-pointer",
+                      "px-5 py-2 rounded-full text-sm font-semibold border transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed",
                       language === lang
                         ? "bg-indigo-600 text-white border-indigo-600"
                         : "bg-dark-200 text-light-100 border-input hover:border-indigo-400"
                     )}
                   >
-                    {lang === "es" ? "🇪🇸 Español" : "🇺🇸 English"}
+                    {isTranslating && language !== lang
+                      ? "Traduciendo..."
+                      : lang === "es" ? "🇪🇸 Español" : "🇺🇸 English"}
                   </button>
                 ))}
               </div>
+              {language === "en" && (
+                <p className="text-xs text-light-400 mt-1">💡 Al cambiar de idioma, el contenido del CV se traduce automáticamente con IA.</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
