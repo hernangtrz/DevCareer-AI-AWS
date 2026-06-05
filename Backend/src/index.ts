@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes";
 import interviewsRoutes from "./routes/interviews.routes";
 import feedbackRoutes from "./routes/feedback.routes";
 import vapiRoutes from "./routes/vapi.routes";
+import cvRoutes from "./routes/cv.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -30,6 +31,7 @@ app.use("/auth", authRoutes);
 app.use("/interviews", interviewsRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/api/vapi", vapiRoutes);
+app.use("/api/cv", cvRoutes);
 
 // ── Manejo de rutas no encontradas ─────────────────────────────────────────────
 app.use((_req, res) => {

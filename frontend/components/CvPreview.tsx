@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Mail, Phone, MapPin, Link2, Briefcase, GraduationCap, Code } from "lucide-react";
+import { Mail, Phone, MapPin, Briefcase, GraduationCap, Code } from "lucide-react";
 
 interface PersonalInfo {
   name: string;
@@ -33,6 +33,7 @@ interface CvPreviewProps {
   experiences: WorkExperience[];
   skills: string[];
   education: Education[];
+  isPrint?: boolean;
 }
 
 const CvPreview = ({
@@ -42,71 +43,99 @@ const CvPreview = ({
   experiences,
   skills,
   education,
+  isPrint = false,
 }: CvPreviewProps) => {
   const isModern = templateId === "moderno" || templateId === "creativo";
+  const iconClass = isPrint ? "h-3.5 w-3.5" : "h-1.5 w-1.5";
 
   return (
     <div
       className={cn(
-        "w-full h-full bg-white text-gray-800 overflow-hidden flex",
-        isModern ? "flex-row" : "flex-col"
+        "w-full h-full bg-white text-gray-800 overflow-hidden flex select-text",
+        isModern ? "flex-row" : "flex-col",
+        isPrint ? "p-8 border border-gray-200 shadow-none print:border-none print:shadow-none" : ""
       )}
-      style={{ fontFamily: "sans-serif", fontSize: "7px", lineHeight: "1.3" }}
+      style={{
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontSize: isPrint ? "11pt" : "7px",
+        lineHeight: "1.4",
+        width: isPrint ? "210mm" : "100%",
+        height: isPrint ? "297mm" : "100%",
+        boxSizing: "border-box",
+      }}
     >
       {/* Sidebar for modern/creative templates */}
       {isModern && (
         <div
-          className="w-[35%] p-3 flex flex-col gap-2 text-white"
+          className={cn(
+            "w-[35%] flex flex-col text-white",
+            isPrint ? "p-6 gap-4" : "p-3 gap-2"
+          )}
           style={{ background: accentColor }}
         >
           {/* Avatar placeholder */}
-          <div className="w-12 h-12 rounded-full bg-white/20 mx-auto mb-1 flex items-center justify-center text-white/60 text-[8px]">
-            {personalInfo.name ? personalInfo.name.charAt(0) : "U"}
+          <div
+            className={cn(
+              "rounded-full bg-white/20 mx-auto flex items-center justify-center text-white/60",
+              isPrint ? "w-20 h-20 text-lg mb-2" : "w-12 h-12 text-[8px] mb-1"
+            )}
+          >
+            {personalInfo.name ? personalInfo.name.charAt(0).toUpperCase() : "U"}
           </div>
 
           <div className="text-center">
-            <p className="font-bold text-[8px] text-white leading-tight">
+            <p
+              className="font-bold text-white leading-tight"
+              style={{ fontSize: "1.2em" }}
+            >
               {personalInfo.name || "Tu Nombre"}
             </p>
-            <p className="text-white/70 text-[6px]">
+            <p className="text-white/70" style={{ fontSize: "0.85em" }}>
               {personalInfo.headline || "Tu Título Profesional"}
             </p>
           </div>
 
-          <div className="flex flex-col gap-1 mt-1">
-            <p className="font-bold text-[7px] uppercase tracking-wide text-white/80 border-b border-white/20 pb-0.5">
+          <div className="flex flex-col gap-1.5 mt-2">
+            <p
+              className="font-bold uppercase tracking-wide text-white/80 border-b border-white/20 pb-0.5"
+              style={{ fontSize: "0.95em" }}
+            >
               Contacto
             </p>
             {personalInfo.email && (
-              <p className="text-[6px] text-white/70 flex items-center gap-1">
-                <Mail className="h-1.5 w-1.5 flex-shrink-0" />
+              <p className="text-white/70 flex items-center gap-1.5 break-all" style={{ fontSize: "0.8em" }}>
+                <Mail className={cn(iconClass, "flex-shrink-0")} />
                 {personalInfo.email}
               </p>
             )}
             {personalInfo.phone && (
-              <p className="text-[6px] text-white/70 flex items-center gap-1">
-                <Phone className="h-1.5 w-1.5 flex-shrink-0" />
+              <p className="text-white/70 flex items-center gap-1.5" style={{ fontSize: "0.8em" }}>
+                <Phone className={cn(iconClass, "flex-shrink-0")} />
                 {personalInfo.phone}
               </p>
             )}
             {personalInfo.location && (
-              <p className="text-[6px] text-white/70 flex items-center gap-1">
-                <MapPin className="h-1.5 w-1.5 flex-shrink-0" />
+              <p className="text-white/70 flex items-center gap-1.5" style={{ fontSize: "0.8em" }}>
+                <MapPin className={cn(iconClass, "flex-shrink-0")} />
                 {personalInfo.location}
               </p>
             )}
           </div>
 
           {skills.length > 0 && (
-            <div className="flex flex-col gap-1 mt-1">
-              <p className="font-bold text-[7px] uppercase tracking-wide text-white/80 border-b border-white/20 pb-0.5">
+            <div className="flex flex-col gap-1.5 mt-2">
+              <p
+                className="font-bold uppercase tracking-wide text-white/80 border-b border-white/20 pb-0.5"
+                style={{ fontSize: "0.95em" }}
+              >
                 Habilidades
               </p>
-              <div className="flex flex-wrap gap-0.5">
-                {skills.slice(0, 8).map((s, i) => (
+              <div className="flex flex-wrap gap-1">
+                {skills.map((s, i) => (
                   <span
                     key={i}
-                    className="px-1 py-0.5 rounded text-[5px] bg-white/20 text-white"
+                    className="px-1.5 py-0.5 rounded bg-white/20 text-white font-medium"
+                    style={{ fontSize: "0.75em" }}
                   >
                     {s}
                   </span>
@@ -118,36 +147,41 @@ const CvPreview = ({
       )}
 
       {/* Main content */}
-      <div className={cn("flex flex-col gap-2 p-3", isModern ? "w-[65%]" : "w-full")}>
+      <div
+        className={cn(
+          "flex flex-col gap-3",
+          isModern ? (isPrint ? "w-[65%] p-6" : "w-[65%] p-3") : (isPrint ? "w-full p-6" : "w-full p-3")
+        )}
+      >
         {/* Header (classic/ATS only) */}
         {!isModern && (
           <div
-            className="pb-2 mb-1"
+            className="pb-2.5 mb-1.5"
             style={{ borderBottom: `2px solid ${accentColor}` }}
           >
             <p
-              className="font-bold text-[10px] leading-tight"
-              style={{ color: accentColor }}
+              className="font-bold leading-tight"
+              style={{ color: accentColor, fontSize: "1.5em" }}
             >
               {personalInfo.name || "Tu Nombre Completo"}
             </p>
-            <p className="text-gray-500 text-[7px]">
+            <p className="text-gray-500 font-medium" style={{ fontSize: "1em" }}>
               {personalInfo.headline || "Título Profesional"}
             </p>
-            <div className="flex gap-2 mt-0.5 flex-wrap">
+            <div className="flex gap-3 mt-1.5 flex-wrap">
               {personalInfo.email && (
-                <span className="text-[6px] text-gray-400 flex items-center gap-0.5">
-                  <Mail className="h-1.5 w-1.5" /> {personalInfo.email}
+                <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
+                  <Mail className={iconClass} /> {personalInfo.email}
                 </span>
               )}
               {personalInfo.phone && (
-                <span className="text-[6px] text-gray-400 flex items-center gap-0.5">
-                  <Phone className="h-1.5 w-1.5" /> {personalInfo.phone}
+                <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
+                  <Phone className={iconClass} /> {personalInfo.phone}
                 </span>
               )}
               {personalInfo.location && (
-                <span className="text-[6px] text-gray-400 flex items-center gap-0.5">
-                  <MapPin className="h-1.5 w-1.5" /> {personalInfo.location}
+                <span className="text-gray-500 flex items-center gap-1" style={{ fontSize: "0.8em" }}>
+                  <MapPin className={iconClass} /> {personalInfo.location}
                 </span>
               )}
             </div>
@@ -158,25 +192,33 @@ const CvPreview = ({
         {experiences.length > 0 && (
           <div>
             <p
-              className="font-bold text-[7px] uppercase tracking-wider mb-1 flex items-center gap-1"
-              style={{ color: accentColor }}
+              className="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+              style={{ color: accentColor, fontSize: "1em" }}
             >
-              <Briefcase className="h-2 w-2" /> Experiencia
+              <Briefcase className={iconClass} /> Experiencia
             </p>
-            {experiences.slice(0, 2).map((exp, i) => (
-              <div key={i} className="mb-1">
-                <div className="flex justify-between items-baseline">
-                  <p className="font-semibold text-[7px]">{exp.role || "Cargo"}</p>
-                  <p className="text-[6px] text-gray-400">
-                    {exp.startDate} {exp.endDate ? `- ${exp.endDate}` : "- Presente"}
+            {experiences.map((exp, i) => (
+              <div key={i} className={cn(isPrint ? "mb-4" : "mb-2")}>
+                <div className="flex justify-between items-baseline flex-wrap">
+                  <p className="font-semibold text-gray-800" style={{ fontSize: "0.95em" }}>
+                    {exp.role || "Cargo"}
+                  </p>
+                  <p className="text-gray-400 font-medium" style={{ fontSize: "0.8em" }}>
+                    {exp.startDate} {exp.endDate ? `– ${exp.endDate}` : "– Presente"}
                   </p>
                 </div>
-                <p className="text-[6px] text-gray-500">{exp.company || "Empresa"}</p>
-                {exp.bullets.slice(0, 2).map((b, bi) => (
-                  <p key={bi} className="text-[6px] text-gray-600 pl-1">
-                    • {b}
-                  </p>
-                ))}
+                <p className="text-gray-500 font-medium" style={{ fontSize: "0.85em" }}>
+                  {exp.company || "Empresa"}
+                </p>
+                <div className="mt-1 flex flex-col gap-0.5">
+                  {exp.bullets.map((b, bi) => (
+                    b && (
+                      <p key={bi} className="text-gray-600 pl-2 relative" style={{ fontSize: "0.85em" }}>
+                        • {b}
+                      </p>
+                    )
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -186,16 +228,23 @@ const CvPreview = ({
         {education.length > 0 && (
           <div>
             <p
-              className="font-bold text-[7px] uppercase tracking-wider mb-1 flex items-center gap-1"
-              style={{ color: accentColor }}
+              className="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+              style={{ color: accentColor, fontSize: "1em" }}
             >
-              <GraduationCap className="h-2 w-2" /> Educación
+              <GraduationCap className={iconClass} /> Educación
             </p>
-            {education.slice(0, 2).map((edu, i) => (
-              <div key={i} className="mb-0.5">
-                <p className="font-semibold text-[7px]">{edu.degree || "Título"}</p>
-                <p className="text-[6px] text-gray-500">
-                  {edu.institution || "Institución"} {edu.year && `· ${edu.year}`}
+            {education.map((edu, i) => (
+              <div key={i} className="mb-2">
+                <div className="flex justify-between items-baseline flex-wrap">
+                  <p className="font-semibold text-gray-800" style={{ fontSize: "0.95em" }}>
+                    {edu.degree || "Título"}
+                  </p>
+                  <p className="text-gray-400 font-medium" style={{ fontSize: "0.8em" }}>
+                    {edu.year}
+                  </p>
+                </div>
+                <p className="text-gray-500 font-medium" style={{ fontSize: "0.85em" }}>
+                  {edu.institution || "Institución"}
                 </p>
               </div>
             ))}
@@ -206,17 +255,17 @@ const CvPreview = ({
         {!isModern && skills.length > 0 && (
           <div>
             <p
-              className="font-bold text-[7px] uppercase tracking-wider mb-1 flex items-center gap-1"
-              style={{ color: accentColor }}
+              className="font-bold uppercase tracking-wider mb-2 flex items-center gap-1.5"
+              style={{ color: accentColor, fontSize: "1em" }}
             >
-              <Code className="h-2 w-2" /> Habilidades
+              <Code className={iconClass} /> Habilidades
             </p>
-            <div className="flex flex-wrap gap-0.5">
-              {skills.slice(0, 10).map((s, i) => (
+            <div className="flex flex-wrap gap-1">
+              {skills.map((s, i) => (
                 <span
                   key={i}
-                  className="px-1 py-0.5 rounded text-[5px] text-white"
-                  style={{ background: accentColor }}
+                  className="px-1.5 py-0.5 rounded text-white font-medium"
+                  style={{ background: accentColor, fontSize: "0.75em" }}
                 >
                   {s}
                 </span>
@@ -227,11 +276,11 @@ const CvPreview = ({
 
         {/* Empty state placeholder lines */}
         {experiences.length === 0 && education.length === 0 && (
-          <div className="flex flex-col gap-1 mt-2 opacity-20">
+          <div className="flex flex-col gap-1.5 mt-2 opacity-20">
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="h-1 rounded bg-gray-400"
+                className="h-1.5 rounded bg-gray-400"
                 style={{ width: `${60 + Math.random() * 35}%` }}
               />
             ))}

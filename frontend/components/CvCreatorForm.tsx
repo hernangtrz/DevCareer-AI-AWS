@@ -12,9 +12,13 @@ import {
   GraduationCap,
   Palette,
   Check,
+  Loader2,
+  Printer,
+  Sparkles,
 } from "lucide-react";
 import CvTemplateCard from "@/components/CvTemplateCard";
 import CvPreview from "@/components/CvPreview";
+import { toast } from "sonner";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface WorkExperience {
@@ -107,6 +111,7 @@ const CvCreatorForm = () => {
   const [selectedTemplate, setSelectedTemplate] = useState("profesional");
   const [showPreview, setShowPreview] = useState(false);
   const [skillInput, setSkillInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     name: "",
@@ -185,6 +190,73 @@ const CvCreatorForm = () => {
     setEducation((prev) =>
       prev.map((edu, idx) => (idx === i ? { ...edu, [key]: value } : edu))
     );
+
+  const handleGenerateWithAi = async () => {
+    if (!targetRole.trim()) {
+      toast.error("Por favor, ingresa tu rol objetivo en el paso 'Personalización' antes de optimizar con IA.");
+      setStep(3); // Ir al paso de personalización
+      return;
+    }
+
+    setIsGenerating(true);
+    const toastId = toast.loading("Optimizando tu CV con Inteligencia Artificial...");
+
+    try {
+      const apiUrl = typeof window !== "undefined"
+        ? "/api/proxy"
+        : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+      const res = await fetch(`${apiUrl}/api/cv/improve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalInfo,
+          experiences,
+          skills,
+          education,
+          targetRole,
+          language,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Error en la respuesta del servidor.");
+      }
+
+      const responseData = await res.json();
+      if (responseData.success && responseData.data) {
+        const { personalInfo: newInfo, experiences: newExp, skills: newSkills } = responseData.data;
+        
+        if (newInfo?.headline) {
+          setPersonalInfo(prev => ({ ...prev, headline: newInfo.headline }));
+        }
+        if (Array.isArray(newExp)) {
+          setExperiences(newExp);
+        }
+        if (Array.isArray(newSkills)) {
+          setSkills(newSkills);
+        }
+        
+        toast.success("¡CV optimizado con éxito!", { id: toastId });
+      } else {
+        throw new Error("No se recibieron datos válidos.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Hubo un error optimizando tu currículum. Inténtalo de nuevo.", { id: toastId });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (!personalInfo.name.trim()) {
+      toast.error("Por favor completa al menos tu nombre antes de descargar el CV.");
+      setStep(0);
+      return;
+    }
+    window.print();
+  };
 
   // ─── Render Steps ───────────────────────────────────────────────────────────
   const renderStep = () => {
@@ -589,28 +661,25 @@ const CvCreatorForm = () => {
               </button>
             ) : (
               <div className="flex gap-3">
-                <div className="relative group">
-                  <button
-                    disabled
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-dark-200 border border-input text-white/40 cursor-not-allowed text-sm font-semibold"
-                  >
-                    Descargar PDF
-                    <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 text-[9px] font-bold">
-                      Pronto
-                    </span>
-                  </button>
-                </div>
-                <div className="relative group">
-                  <button
-                    disabled
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-600/40 border border-indigo-500/30 text-indigo-300/60 cursor-not-allowed text-sm font-semibold"
-                  >
-                    ✨ Generar con IA
-                    <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 text-[9px] font-bold">
-                      Pronto
-                    </span>
-                  </button>
-                </div>
+                <button
+                  onClick={handleDownloadPdf}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-dark-200 border border-input text-white hover:border-indigo-400 hover:text-indigo-300 transition-all text-sm font-semibold cursor-pointer"
+                >
+                  <Printer className="h-4 w-4" />
+                  Descargar PDF
+                </button>
+                <button
+                  onClick={handleGenerateWithAi}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/40 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all cursor-pointer shadow-[0_0_12px_rgba(99,102,241,0.3)] animate-pulse"
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  Optimizar con IA
+                </button>
               </div>
             )}
           </div>
@@ -651,6 +720,19 @@ const CvCreatorForm = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* ─── Elemento oculto exclusivo para impresión ─── */}
+      <div className="cv-print-only">
+        <CvPreview
+          templateId={selectedTemplate}
+          accentColor={activeAccent}
+          personalInfo={personalInfo}
+          experiences={experiences}
+          skills={skills}
+          education={education}
+          isPrint={true}
+        />
       </div>
     </div>
   );

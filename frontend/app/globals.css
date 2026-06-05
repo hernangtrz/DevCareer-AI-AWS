@@ -332,3 +332,40 @@
     transform: translateY(0);
   }
 }
+
+/* ─── Estilos de Impresión para Exportar CV a PDF ─── */
+@media screen {
+  .cv-print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  body > *:not(.cv-print-only) {
+    display: none !important;
+  }
+
+  .cv-print-only {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    z-index: 99999;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
