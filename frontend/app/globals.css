@@ -346,11 +346,12 @@
 }
 
 @media print {
-  html, body {
+  html, body, .root-layout {
     margin: 0 !important;
     padding: 0 !important;
     width: 210mm !important;
     height: auto !important;
+    max-width: none !important;
     background: white !important;
     color: black !important;
   }

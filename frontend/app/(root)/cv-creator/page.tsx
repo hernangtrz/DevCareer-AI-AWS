@@ -12,7 +12,7 @@ const Page = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* ─── Header Navigation ─── */}
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 no-print">
         <Link
           href="/dashboard"
           className="flex items-center gap-2 text-white/60 hover:text-white transition-colors w-fit text-sm font-medium"
@@ -37,7 +37,7 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="h-px bg-white/10 w-full" />
+      <div className="h-px bg-white/10 w-full no-print" />
 
       {/* ─── Interactive CV Creator Form ─── */}
       <CvCreatorForm />
