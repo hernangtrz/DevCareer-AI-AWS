@@ -8,6 +8,16 @@ import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/api";
 import { getCognitoIdToken } from "@/lib/cognito";
+import { 
+  Room, 
+  RoomEvent, 
+  Participant, 
+  RemoteParticipant,
+  LocalParticipant,
+  Track, 
+  ConnectionState,
+  TranscriptionSegment 
+} from "livekit-client";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -18,6 +28,7 @@ enum CallStatus {
 }
 
 interface SavedMessage {
+  id?: string;
   role: "user" | "system" | "assistant";
   content: string;
 }
@@ -33,8 +44,13 @@ const Agent = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  const [lkRoom, setLkRoom] = useState<Room | null>(null);
+
+  const isLiveKit = process.env.NEXT_PUBLIC_VOICE_PROVIDER === "livekit";
 
   useEffect(() => {
+    if (isLiveKit) return;
+
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
 
@@ -65,7 +81,15 @@ const Agent = ({
       vapi.off("speech-end", onSpeechEnd);
       vapi.off("error", onError);
     };
-  }, []);
+  }, [isLiveKit]);
+
+  useEffect(() => {
+    return () => {
+      if (lkRoom) {
+        lkRoom.disconnect();
+      }
+    };
+  }, [lkRoom]);
 
   const handleGenerateFeedback = async (msgs: SavedMessage[]) => {
     console.log("Generate feedback here.");
@@ -75,10 +99,12 @@ const Agent = ({
       // Obtener ID Token de Cognito desde localStorage
       const idToken = getCognitoIdToken();
 
+      const cleanMsgs = msgs.map(({ role, content }) => ({ role, content }));
+
       const { success, feedbackId: id } = await createFeedback(
         {
           interviewId: interviewId!,
-          transcript: msgs,
+          transcript: cleanMsgs,
         },
         idToken,
       );
@@ -108,34 +134,131 @@ const Agent = ({
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (type === "generate") {
-      await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-        variableValues: {
-          username: userName,
-          userid: userId,
-          userId: userId,
-        },
-      });
-    } else {
-      let formattedQuestions = "";
+    if (isLiveKit) {
+      try {
+        const roomName = type === "generate"
+          ? `generate_${userId || "unknown"}_${Date.now()}`
+          : `interview_${interviewId || "unknown"}_${Date.now()}`;
+        const identity = `developer_${userId || Math.floor(Math.random() * 1000)}`;
 
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
+        const apiUrl = typeof window !== "undefined"
+          ? "/api/proxy"
+          : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        const tokenResponse = await fetch(`${apiUrl}/api/livekit/token?room=${roomName}&identity=${identity}`);
+        
+        if (!tokenResponse.ok) {
+          throw new Error("No se pudo obtener el token de LiveKit.");
+        }
+
+        const { token, url } = await tokenResponse.json();
+
+        const currentRoom = new Room({
+          adaptiveStream: true,
+          dynacast: true,
+          publishDefaults: {
+            audioBitrate: 20000,
+          },
+        });
+
+        currentRoom.on(RoomEvent.ConnectionStateChanged, (state) => {
+          if (state === ConnectionState.Connected) {
+            setCallStatus(CallStatus.ACTIVE);
+          } else if (state === ConnectionState.Disconnected) {
+            setCallStatus(CallStatus.FINISHED);
+            setLkRoom(null);
+            setIsSpeaking(false);
+          }
+        });
+
+        currentRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          if (track.kind === Track.Kind.Audio) {
+            const element = track.attach();
+            document.body.appendChild(element);
+            console.log(`[Audio Subscribed] Reproduciendo audio de: ${participant.identity}`);
+          }
+        });
+
+        currentRoom.on(RoomEvent.TrackUnsubscribed, (track) => {
+          track.detach().forEach((element) => element.remove());
+        });
+
+        currentRoom.on(RoomEvent.IsSpeakingChanged, (participant, speaking) => {
+          const isAgent = !participant.identity.startsWith("developer_") && participant instanceof RemoteParticipant;
+          if (isAgent) {
+            setIsSpeaking(speaking);
+          }
+        });
+
+        currentRoom.on(RoomEvent.TranscriptionReceived, (segments: TranscriptionSegment[], participant?: Participant) => {
+          if (!participant) return;
+          const isSelf = participant instanceof LocalParticipant;
+          const sender = isSelf ? "user" : "agent";
+
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            segments.forEach((segment) => {
+              const index = newMessages.findIndex((m) => m.id === segment.id);
+              if (index !== -1) {
+                newMessages[index] = {
+                  ...newMessages[index],
+                  content: segment.text,
+                };
+              } else if (segment.text.trim()) {
+                newMessages.push({
+                  id: segment.id,
+                  role: sender === "agent" ? "assistant" : "user",
+                  content: segment.text,
+                });
+              }
+            });
+            return newMessages;
+          });
+        });
+
+        await currentRoom.connect(url, token);
+        await currentRoom.localParticipant.setMicrophoneEnabled(true);
+        setLkRoom(currentRoom);
+
+      } catch (err) {
+        console.error("Error al iniciar llamada con LiveKit:", err);
+        setCallStatus(CallStatus.FINISHED);
       }
+    } else {
+      if (type === "generate") {
+        await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
+          variableValues: {
+            username: userName,
+            userid: userId,
+            userId: userId,
+          },
+        });
+      } else {
+        let formattedQuestions = "";
 
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+        if (questions) {
+          formattedQuestions = questions
+            .map((question) => `- ${question}`)
+            .join("\n");
+        }
+
+        await vapi.start(interviewer, {
+          variableValues: {
+            questions: formattedQuestions,
+          },
+        });
+      }
     }
   };
 
   const handleDisconnect = async () => {
     setCallStatus(CallStatus.FINISHED);
-    vapi.stop();
+    if (isLiveKit) {
+      if (lkRoom) {
+        lkRoom.disconnect();
+      }
+    } else {
+      vapi.stop();
+    }
   };
 
   const latestMessage = messages[messages.length - 1]?.content;
