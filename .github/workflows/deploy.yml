@@ -174,6 +174,7 @@ jobs:
             NEXT_PUBLIC_AWS_REGION=us-east-1
             NEXT_PUBLIC_VAPI_WEB_TOKEN=${{ secrets.VAPI_WEB_TOKEN }}
             NEXT_PUBLIC_VAPI_WORKFLOW_ID=${{ secrets.VAPI_WORKFLOW_ID }}
+            NEXT_PUBLIC_VOICE_PROVIDER=livekit
 
   # ────────────────────────────────────────────────────────────────────────────
   # FASE 2b: Build y Push de la Imagen Docker del Backend
