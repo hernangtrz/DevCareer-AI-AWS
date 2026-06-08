@@ -11,11 +11,11 @@ dotenv.config();
 
 export default defineAgent({
   entry: async (ctx: JobContext) => {
-    console.log(`[Agent] Conectando a la sala: ${ctx.room.name}`);
+    console.log(`[Agent] Conectando a la sala: ${ctx.job.room.name}`);
     await ctx.connect();
     console.log(`[Agent] Conectado exitosamente.`);
 
-    const roomName = ctx.room.name || '';
+    const roomName = ctx.job.room.name || '';
     let instructions = '';
     let greeting = '';
     const tools: Record<string, any> = {};
