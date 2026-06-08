@@ -125,3 +125,45 @@ variable "backend_cpu" { type = number }
 variable "backend_memory" { type = number }
 variable "frontend_desired_count" { type = number }
 variable "backend_desired_count" { type = number }
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LIVEKIT (backend — generación de tokens)
+# ──────────────────────────────────────────────────────────────────────────────
+variable "livekit_url" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "livekit_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "livekit_api_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LIVEKIT AGENT PROVIDERS (para referencia futura del agente)
+# ──────────────────────────────────────────────────────────────────────────────
+variable "deepgram_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "cartesia_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "groq_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}

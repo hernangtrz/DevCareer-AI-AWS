@@ -151,7 +151,10 @@ resource "aws_ecs_task_definition" "backend" {
         { name = "DYNAMO_TABLE_USERS", value = var.dynamo_table_users },
         { name = "DYNAMO_TABLE_INTERVIEWS", value = var.dynamo_table_interviews },
         { name = "DYNAMO_TABLE_FEEDBACK", value = var.dynamo_table_feedback },
-        { name = "GOOGLE_GENERATIVE_AI_API_KEY", value = var.google_generative_ai_api_key }
+        { name = "GOOGLE_GENERATIVE_AI_API_KEY", value = var.google_generative_ai_api_key },
+        { name = "LIVEKIT_URL", value = var.livekit_url },
+        { name = "LIVEKIT_API_KEY", value = var.livekit_api_key },
+        { name = "LIVEKIT_API_SECRET", value = var.livekit_api_secret }
       ]
 
       logConfiguration = {

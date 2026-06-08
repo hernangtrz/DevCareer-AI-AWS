@@ -112,6 +112,11 @@ module "ecs" {
   # Google Gemini (backend)
   google_generative_ai_api_key = var.google_generative_ai_api_key
 
+  # LiveKit (backend — generación de tokens de sala)
+  livekit_url        = var.livekit_url
+  livekit_api_key    = var.livekit_api_key
+  livekit_api_secret = var.livekit_api_secret
+
   # Cognito Auth + Vapi (frontend — runtime inject)
   next_public_api_url          = "http://${module.alb.external_alb_dns}"
   cognito_user_pool_id         = module.cognito.user_pool_id

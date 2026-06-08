@@ -118,6 +118,12 @@ jobs:
           TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
           TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
           TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
+          TF_VAR_livekit_url: ${{ secrets.LIVEKIT_URL }}
+          TF_VAR_livekit_api_key: ${{ secrets.LIVEKIT_API_KEY }}
+          TF_VAR_livekit_api_secret: ${{ secrets.LIVEKIT_API_SECRET }}
+          TF_VAR_deepgram_api_key: ${{ secrets.DEEPGRAM_API_KEY }}
+          TF_VAR_cartesia_api_key: ${{ secrets.CARTESIA_API_KEY }}
+          TF_VAR_groq_api_key: ${{ secrets.GROQ_API_KEY }}
         run: |
           cd terraform-aws
           terraform init
@@ -271,6 +277,12 @@ jobs:
           TF_VAR_google_generative_ai_api_key: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
           TF_VAR_next_public_vapi_web_token: ${{ secrets.VAPI_WEB_TOKEN }}
           TF_VAR_next_public_vapi_workflow_id: ${{ secrets.VAPI_WORKFLOW_ID }}
+          TF_VAR_livekit_url: ${{ secrets.LIVEKIT_URL }}
+          TF_VAR_livekit_api_key: ${{ secrets.LIVEKIT_API_KEY }}
+          TF_VAR_livekit_api_secret: ${{ secrets.LIVEKIT_API_SECRET }}
+          TF_VAR_deepgram_api_key: ${{ secrets.DEEPGRAM_API_KEY }}
+          TF_VAR_cartesia_api_key: ${{ secrets.CARTESIA_API_KEY }}
+          TF_VAR_groq_api_key: ${{ secrets.GROQ_API_KEY }}
           TF_VAR_frontend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-frontend:${{ github.sha }}
           TF_VAR_backend_image: ${{ secrets.DOCKERHUB_USERNAME }}/devcareer-backend:${{ github.sha }}
         run: |

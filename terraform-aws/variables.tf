@@ -186,3 +186,45 @@ variable "next_public_vapi_web_token" {
 variable "next_public_vapi_workflow_id" {
   type = string
 }
+
+# ─────────────────────────────────────────
+# LIVEKIT
+# ─────────────────────────────────────────
+variable "livekit_url" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "livekit_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "livekit_api_secret" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+# ─────────────────────────────────────────
+# LIVEKIT AGENT PROVIDERS
+# ─────────────────────────────────────────
+variable "deepgram_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "cartesia_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
+
+variable "groq_api_key" {
+  type      = string
+  sensitive = true
+  default   = ""
+}
