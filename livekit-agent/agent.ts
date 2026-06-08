@@ -11,14 +11,15 @@ dotenv.config();
 
 export default defineAgent({
   entry: async (ctx: JobContext) => {
-    console.log(`[Agent] Conectando a la sala: ${ctx.job.room.name}`);
+    console.log(`[Agent] Conectando a la sala: ${ctx.job.room?.name || 'desconocida'}`);
     await ctx.connect();
     console.log(`[Agent] Conectado exitosamente.`);
 
-    const roomName = ctx.job.room.name || '';
+    const roomName = ctx.job.room?.name || '';
     let instructions = '';
     let greeting = '';
     const tools: Record<string, any> = {};
+    let hasSaved = false;
 
     // Cargar Voice Activity Detection (Silero VAD)
     const vad = await silero.VAD.load();
@@ -30,8 +31,8 @@ export default defineAgent({
       const userId = parts[1] || 'user_unknown';
 
       greeting = 'Hola, bienvenido a DevCareer AI. Soy Alejandro, tu asistente de configuración. ¿Para qué puesto o rol técnico te gustaría preparar una entrevista hoy?';
-      
-      instructions = 
+
+      instructions =
         'Eres un asistente de voz experto en configurar entrevistas de trabajo para DevCareer AI. Tu objetivo es interactuar de manera fluida y recopilar la información necesaria del usuario para configurar su simulación.\n\n' +
         'Debes recopilar los siguientes campos del usuario:\n' +
         '1. El rol técnico o puesto (ej. Frontend Developer, Backend Developer, Full Stack, Product Manager).\n' +
@@ -55,9 +56,14 @@ export default defineAgent({
           level: z.enum(['Junior', 'Semi-Senior', 'Senior']).describe('El nivel de experiencia: Junior, Semi-Senior, o Senior'),
           techstack: z.array(z.string()).describe('Lista de tecnologías clave requeridas, ej. React, Node.js, TypeScript, PostgreSQL'),
           type: z.enum(['tecnica', 'comportamiento', 'mixta']).describe('El tipo o enfoque de la entrevista: tecnica (técnica), comportamiento (behavioral) o mixta'),
-          amount: z.number().default(5).describe('La cantidad de preguntas a generar'),
+          amount: z.number().describe('La cantidad de preguntas a generar (ej. 5). DEBES preguntar explícitamente al usuario cuántas preguntas quiere antes de llamar a esta herramienta.'),
         }),
         execute: async ({ role, level, techstack, type, amount }) => {
+          if (hasSaved) {
+            console.log(`[Agent Tool] saveParameters ignorado porque ya fue ejecutado con éxito.`);
+            return 'La entrevista ya fue guardada y creada anteriormente con éxito en el servidor. Dile al usuario que ya está lista en su dashboard.';
+          }
+          hasSaved = true;
           console.log(`[Agent Tool] Ejecutando saveParameters con args:`, { role, level, techstack, type, amount });
           try {
             const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
@@ -82,11 +88,13 @@ export default defineAgent({
               console.log(`[Agent Tool] Backend respondió éxito:`, data);
               return 'Los parámetros han sido guardados con éxito en la base de datos y la entrevista fue generada. Puedes decírselo al usuario y despedirte amablemente.';
             } else {
+              hasSaved = false; // Permitir reintento
               const text = await res.text();
               console.error(`[Agent Tool] Error en backend response:`, text);
               return 'Hubo un error al guardar los parámetros en el servidor. Dile al usuario que intente de nuevo.';
             }
           } catch (err: any) {
+            hasSaved = false; // Permitir reintento
             console.error(`[Agent Tool] Excepción al llamar backend:`, err);
             return `Ocurrió una excepción al conectar con el servidor: ${err.message}`;
           }
@@ -171,7 +179,7 @@ export default defineAgent({
       // Cartesia TTS (sonic-3.5)
       tts: new cartesia.TTS({
         model: 'sonic-3.5',
-        voice: '162e0f37-8504-474c-bb33-c606c01890dc', // Alejandro - Calm Mentor en español
+        voice: '7c1ecd2d-1c83-4d5d-a25c-b3820a274a2e', // Alejandro - Calm Mentor en español
         language: 'es',
       }),
       // Configuración de turnos súper estable para evitar silencios / congelamientos
