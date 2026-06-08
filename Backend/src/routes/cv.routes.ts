@@ -1,17 +1,8 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 
-// pdf-parse CJS/ESM interop: handle both direct function export and wrapped default
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const _pdfParseModule = require("pdf-parse");
-const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
-  typeof _pdfParseModule === "function"
-    ? _pdfParseModule
-    : (_pdfParseModule.default ?? _pdfParseModule);
-
-
-
 const router = Router();
+
 
 // ── Multer config (memory storage, max 10MB) ──────────────────────────────────
 const upload = multer({
@@ -82,9 +73,13 @@ router.post(
       let cvText = rawCvText || "";
 
       if (req.file) {
-        const parsed = await pdfParse(req.file.buffer);
+        // Dynamic import handles pdf-parse v2.x ESM correctly from CJS compiled code
+        const pdfParseModule = await import("pdf-parse");
+        const pdfParseFn = (pdfParseModule as any).default ?? pdfParseModule;
+        const parsed = await pdfParseFn(req.file.buffer);
         cvText = parsed.text || "";
       }
+
 
       if (!cvText || cvText.trim().length < 50) {
         res.status(400).json({
