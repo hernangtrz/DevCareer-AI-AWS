@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckCircle2, ChevronRight, HelpCircle, FileText, AlertTriangle, ShieldCheck } from "lucide-react";
+import { CheckCircle2, HelpCircle, FileText, AlertTriangle, ShieldCheck, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Suggestion {
-  category: "formatting" | "impact" | "grammar" | "structure";
+  category: "formatting" | "impact" | "grammar" | "structure" | "keywords";
   title: string;
   description: string;
   severity: "high" | "medium" | "low";
@@ -39,6 +39,8 @@ const SuggestionCard = ({ suggestions }: SuggestionCardProps) => {
 
   const getCategoryIcon = (cat: Suggestion["category"]) => {
     switch (cat) {
+      case "keywords":
+        return <Search className="h-4 w-4 text-fuchsia-400" />;
       case "formatting":
         return <FileText className="h-4 w-4 text-sky-400" />;
       case "impact":
@@ -47,6 +49,8 @@ const SuggestionCard = ({ suggestions }: SuggestionCardProps) => {
         return <AlertTriangle className="h-4 w-4 text-rose-400" />;
       case "structure":
         return <HelpCircle className="h-4 w-4 text-amber-400" />;
+      default:
+        return <HelpCircle className="h-4 w-4 text-white/40" />;
     }
   };
 

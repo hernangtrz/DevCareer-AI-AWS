@@ -1,6 +1,148 @@
 import { Router, Request, Response } from "express";
+import multer from "multer";
+// pdf-parse is CommonJS; import via require to avoid TS call-signature issues
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+
 
 const router = Router();
+
+// ── Multer config (memory storage, max 10MB) ──────────────────────────────────
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (
+      file.mimetype === "application/pdf" ||
+      file.originalname.endsWith(".pdf")
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error("Solo se admiten archivos PDF."));
+    }
+  },
+});
+
+// ── Helper: llamada a Gemini ──────────────────────────────────────────────────
+async function callGemini(prompt: string, temperature = 0.4): Promise<any> {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!apiKey) throw new Error("Falta GOOGLE_GENERATIVE_AI_API_KEY.");
+
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  const res = await fetch(apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature,
+        responseMimeType: "application/json",
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error(`Gemini API error ${res.status}: ${errBody}`);
+  }
+
+  const data = (await res.json()) as any;
+  const rawText: string = data.candidates[0].content.parts[0].text;
+  const cleanText = rawText.replace(/```json|```/g, "").trim();
+  return JSON.parse(cleanText);
+}
+
+// POST /api/cv/analyze ─────────────────────────────────────────────────────────
+router.post(
+  "/analyze",
+  upload.single("cvFile"),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { jobDescription, cvText: rawCvText } = req.body as {
+        jobDescription?: string;
+        cvText?: string;
+      };
+
+      if (!jobDescription || jobDescription.trim().length < 20) {
+        res.status(400).json({
+          success: false,
+          message: "Debes proporcionar una descripción de vacante (mínimo 20 caracteres).",
+        });
+        return;
+      }
+
+      // Extract CV text: from uploaded PDF or plain text field
+      let cvText = rawCvText || "";
+
+      if (req.file) {
+        const parsed = await pdfParse(req.file.buffer);
+        cvText = parsed.text || "";
+      }
+
+      if (!cvText || cvText.trim().length < 50) {
+        res.status(400).json({
+          success: false,
+          message:
+            "No se pudo extraer suficiente texto del CV. Asegúrate de que el PDF no esté protegido o usa la opción de pegar el texto directamente.",
+        });
+        return;
+      }
+
+      const prompt = `Eres un sistema experto en reclutamiento tecnológico y análisis de compatibilidad ATS (Applicant Tracking System).
+
+Tu tarea es analizar cuán compatible es el siguiente CURRÍCULUM con la OFERTA DE EMPLEO proporcionada.
+
+─── CURRÍCULUM DEL CANDIDATO ───
+${cvText.slice(0, 6000)}
+
+─── DESCRIPCIÓN DE LA OFERTA DE EMPLEO ───
+${jobDescription.slice(0, 3000)}
+
+─── INSTRUCCIONES DE ANÁLISIS ───
+1. Analiza con precisión qué tan bien encaja el currículum con los requisitos de la oferta.
+2. Identifica las palabras clave técnicas y habilidades presentes en la oferta y si están en el CV.
+3. Evalúa el formato, gramática, impacto de los logros y uso de métricas.
+4. Genera sugerencias concretas y accionables para mejorar el CV.
+5. El idioma de la respuesta debe ser ESPAÑOL.
+
+Devuelve ÚNICAMENTE un objeto JSON con la siguiente estructura exacta (sin markdown, sin backticks):
+{
+  "score": <número 0-100 que representa compatibilidad ATS global>,
+  "summary": "<resumen ejecutivo de 2-3 oraciones sobre la compatibilidad del candidato>",
+  "breakdown": {
+    "keywords": <0-100, porcentaje de palabras clave de la oferta presentes en el CV>,
+    "formatting": <0-100, calidad del formato y legibilidad del CV>,
+    "grammar": <0-100, gramática, claridad y estilo de redacción>,
+    "impact": <0-100, uso de métricas, logros cuantificables y verbos de acción>
+  },
+  "matchedKeywords": [<lista de keywords/habilidades del anuncio que SÍ aparecen en el CV, máximo 12>],
+  "missingKeywords": [<lista de keywords/habilidades críticas del anuncio que NO están en el CV, máximo 10>],
+  "suggestions": [
+    {
+      "category": "<una de: 'keywords' | 'formatting' | 'grammar' | 'impact' | 'structure'>",
+      "title": "<título corto y accionable de la sugerencia>",
+      "description": "<explicación detallada de cómo mejorar este aspecto específico>",
+      "severity": "<una de: 'high' | 'medium' | 'low'>"
+    }
+  ]
+}
+
+Importante: El campo "suggestions" debe tener entre 3 y 6 elementos ordenados por severity (high primero).`;
+
+      const result = await callGemini(prompt, 0.3);
+
+      res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      console.error("Error en /api/cv/analyze:", error?.message || error);
+      res.status(500).json({
+        success: false,
+        message: error?.message || "Error al analizar el CV con IA.",
+      });
+    }
+  }
+);
+
 
 // POST /api/cv/improve - Optimizar hoja de vida con Gemini AI
 router.post("/improve", async (req: Request, res: Response): Promise<void> => {
