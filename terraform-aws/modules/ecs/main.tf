@@ -93,7 +93,8 @@ resource "aws_ecs_task_definition" "frontend" {
         { name = "NEXT_PUBLIC_COGNITO_CLIENT_ID", value = var.cognito_client_id },
         { name = "NEXT_PUBLIC_AWS_REGION", value = var.aws_region },
         { name = "NEXT_PUBLIC_VAPI_WEB_TOKEN", value = var.next_public_vapi_web_token },
-        { name = "NEXT_PUBLIC_VAPI_WORKFLOW_ID", value = var.next_public_vapi_workflow_id }
+        { name = "NEXT_PUBLIC_VAPI_WORKFLOW_ID", value = var.next_public_vapi_workflow_id },
+        { name = "GOOGLE_GENERATIVE_AI_API_KEY", value = var.google_generative_ai_api_key }
       ]
 
       logConfiguration = {

@@ -8,15 +8,15 @@ import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/api";
 import { getCognitoIdToken } from "@/lib/cognito";
-import { 
-  Room, 
-  RoomEvent, 
-  Participant, 
+import {
+  Room,
+  RoomEvent,
+  Participant,
   RemoteParticipant,
   LocalParticipant,
-  Track, 
+  Track,
   ConnectionState,
-  TranscriptionSegment 
+  TranscriptionSegment
 } from "livekit-client";
 
 enum CallStatus {
@@ -34,10 +34,10 @@ interface SavedMessage {
 }
 
 const VOICE_OPTIONS = [
-  { key: "jeronimo-es", label: "Alejandro (Español LatAm - Varón)", lang: "es" },
+  { key: "jeronimo-es", label: "Alejandro (Español LatAm - Hombre)", lang: "es" },
   { key: "daniela-es", label: "Daniela (Español México - Dama)", lang: "es" },
   { key: "brooke-en", label: "Brooke (Inglés US - Dama)", lang: "en" },
-  { key: "australian-en", label: "Oliver (Inglés Australia - Varón)", lang: "en" },
+  { key: "australian-en", label: "Oliver (Inglés Australia - Hombre)", lang: "en" },
 ];
 
 const Agent = ({
@@ -153,7 +153,7 @@ const Agent = ({
           ? "/api/proxy"
           : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
         const tokenResponse = await fetch(`${apiUrl}/api/livekit/token?room=${roomName}&identity=${identity}`);
-        
+
         if (!tokenResponse.ok) {
           throw new Error("No se pudo obtener el token de LiveKit.");
         }
@@ -163,9 +163,6 @@ const Agent = ({
         const currentRoom = new Room({
           adaptiveStream: true,
           dynacast: true,
-          publishDefaults: {
-            audioBitrate: 20000,
-          },
         });
 
         currentRoom.on(RoomEvent.ConnectionStateChanged, (state) => {
@@ -190,11 +187,11 @@ const Agent = ({
           track.detach().forEach((element) => element.remove());
         });
 
-        currentRoom.on(RoomEvent.IsSpeakingChanged, (participant, speaking) => {
-          const isAgent = !participant.identity.startsWith("developer_") && participant instanceof RemoteParticipant;
-          if (isAgent) {
-            setIsSpeaking(speaking);
-          }
+        currentRoom.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+          const isAgentSpeaking = speakers.some(
+            (s) => !s.identity.startsWith("developer_") && s instanceof RemoteParticipant
+          );
+          setIsSpeaking(isAgentSpeaking);
         });
 
         currentRoom.on(RoomEvent.TranscriptionReceived, (segments: TranscriptionSegment[], participant?: Participant) => {
