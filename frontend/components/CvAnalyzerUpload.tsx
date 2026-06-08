@@ -99,8 +99,6 @@ const CvAnalyzerUpload = () => {
   const [analyzedFileName, setAnalyzedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleSelectPreset = (id: string) => {
     const p = JOB_PRESETS.find((x) => x.id === id);
@@ -175,7 +173,8 @@ const CvAnalyzerUpload = () => {
         formData.append("cvText", cvPastedText);
       }
 
-      const response = await fetch(`${API_URL}/api/cv/analyze`, {
+      // Call the Next.js proxy route (same origin) which forwards to the Express backend
+      const response = await fetch("/api/cv/analyze", {
         method: "POST",
         body: formData,
       });
@@ -196,6 +195,7 @@ const CvAnalyzerUpload = () => {
       setIsAnalyzing(false);
     }
   };
+
 
   const resetAnalysis = () => {
     setResults(null);
