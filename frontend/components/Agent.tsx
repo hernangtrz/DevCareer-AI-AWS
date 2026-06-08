@@ -33,6 +33,13 @@ interface SavedMessage {
   content: string;
 }
 
+const VOICE_OPTIONS = [
+  { key: "jeronimo-es", label: "Alejandro (Español LatAm - Varón)", lang: "es" },
+  { key: "daniela-es", label: "Daniela (Español México - Dama)", lang: "es" },
+  { key: "brooke-en", label: "Brooke (Inglés US - Dama)", lang: "en" },
+  { key: "australian-en", label: "Oliver (Inglés Australia - Varón)", lang: "en" },
+];
+
 const Agent = ({
   userName,
   userId,
@@ -45,6 +52,7 @@ const Agent = ({
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [lkRoom, setLkRoom] = useState<Room | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState("jeronimo-es");
 
   const isLiveKit = process.env.NEXT_PUBLIC_VOICE_PROVIDER === "livekit";
 
@@ -137,8 +145,8 @@ const Agent = ({
     if (isLiveKit) {
       try {
         const roomName = type === "generate"
-          ? `generate_${userId || "unknown"}_${Date.now()}`
-          : `interview_${interviewId || "unknown"}_${Date.now()}`;
+          ? `generate_${userId || "unknown"}_${selectedVoice}_${Date.now()}`
+          : `interview_${interviewId || "unknown"}_${selectedVoice}_${Date.now()}`;
         const identity = `developer_${userId || Math.floor(Math.random() * 1000)}`;
 
         const apiUrl = typeof window !== "undefined"
@@ -310,6 +318,26 @@ const Agent = ({
 
   return (
     <>
+      {isLiveKit && (
+        <div className="flex justify-end mb-5">
+          <div className="flex flex-col gap-1.5 w-64">
+            <label className="text-light-400 text-xs font-semibold">Idioma / Voz del Entrevistador</label>
+            <select
+              value={selectedVoice}
+              onChange={(e) => setSelectedVoice(e.target.value)}
+              disabled={callStatus === CallStatus.CONNECTING || callStatus === CallStatus.ACTIVE}
+              className="bg-dark-300 text-light-100 border border-dark-100 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary-200 disabled:opacity-50 transition-all cursor-pointer"
+            >
+              {VOICE_OPTIONS.map((opt) => (
+                <option key={opt.key} value={opt.key} className="bg-dark-300 text-light-100">
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
       <div className="call-view">
         <div className="card-interviewer">
           <div className="avatar">
