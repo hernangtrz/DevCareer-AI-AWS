@@ -19,7 +19,7 @@ const VOICE_MAP: Record<string, { voice: string; language: string; name: string 
     name: 'Alejandro'
   },
   'daniela-es': {
-    voice: '399002e9-7f7d-42d4-a6a8-9b91bd809b9d', // Daniela (Mexican Spanish)
+    voice: '5c5ad5e7-1020-476b-8b91-fdcbe9cc313c', // Daniela (Mexican Spanish)
     language: 'es',
     name: 'Daniela'
   },
@@ -29,7 +29,7 @@ const VOICE_MAP: Record<string, { voice: string; language: string; name: string 
     name: 'Brooke'
   },
   'australian-en': {
-    voice: 'f786b574-daa5-4673-aa0c-cbe3e8534c02', // Friendly Australian Man (English)
+    voice: 'ee7ea9f8-c0c1-498c-9279-764d6b56d189', // Friendly Australian Man (English)
     language: 'en',
     name: 'Oliver'
   }
