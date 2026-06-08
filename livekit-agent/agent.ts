@@ -9,6 +9,9 @@ import { z } from 'zod';
 
 dotenv.config();
 
+// Cargar Voice Activity Detection (Silero VAD) una vez globalmente al iniciar el contenedor
+const vad = await silero.VAD.load();
+
 export default defineAgent({
   entry: async (ctx: JobContext) => {
     console.log(`[Agent] Conectando a la sala: ${ctx.job.room?.name || 'desconocida'}`);
@@ -20,9 +23,6 @@ export default defineAgent({
     let greeting = '';
     const tools: Record<string, any> = {};
     let hasSaved = false;
-
-    // Cargar Voice Activity Detection (Silero VAD)
-    const vad = await silero.VAD.load();
 
     // ── CONFIGURACIÓN SEGÚN TIPO DE SALA ───────────────────────────────────────────
     if (roomName.startsWith('generate_')) {
