@@ -1,8 +1,14 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
-// pdf-parse is CommonJS; import via require to avoid TS call-signature issues
+
+// pdf-parse CJS/ESM interop: handle both direct function export and wrapped default
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const pdfParse = require("pdf-parse") as (buf: Buffer) => Promise<{ text: string }>;
+const _pdfParseModule = require("pdf-parse");
+const pdfParse: (buf: Buffer) => Promise<{ text: string }> =
+  typeof _pdfParseModule === "function"
+    ? _pdfParseModule
+    : (_pdfParseModule.default ?? _pdfParseModule);
+
 
 
 const router = Router();
