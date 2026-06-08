@@ -4,6 +4,9 @@
 # ──────────────────────────────────────────────────────────────────────────────
 FROM node:22-slim
 
+# Instalar certificados CA para poder verificar peticiones HTTPS a LiveKit Cloud y APIs externas
+RUN apt-get update -qq && apt-get install --no-install-recommends -y ca-certificates && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copiar manifiestos e instalar dependencias primero (capa cacheada)
