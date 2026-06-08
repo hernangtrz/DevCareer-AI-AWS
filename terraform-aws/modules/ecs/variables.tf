@@ -167,3 +167,22 @@ variable "groq_api_key" {
   sensitive = true
   default   = ""
 }
+
+# ──────────────────────────────────────────────────────────────────────────────
+# LIVEKIT AGENT — ECS Service
+# ──────────────────────────────────────────────────────────────────────────────
+variable "livekit_agent_image" {
+  type    = string
+  default = ""
+}
+
+variable "livekit_agent_sg_id" {
+  type    = string
+  default = ""
+}
+
+variable "backend_internal_url" {
+  description = "URL interna del backend via ALB interno (para que el agente se comunique dentro de la VPC)"
+  type        = string
+  default     = ""
+}

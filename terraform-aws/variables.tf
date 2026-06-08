@@ -67,6 +67,12 @@ variable "backend_image" {
   default     = "hernang09/backend:v3"
 }
 
+variable "livekit_agent_image" {
+  description = "Docker Hub image for the LiveKit voice agent worker"
+  type        = string
+  default     = "hernang09/devcareer-agent:latest"
+}
+
 # ─────────────────────────────────────────
 # ECS — TASK SIZING
 # ─────────────────────────────────────────

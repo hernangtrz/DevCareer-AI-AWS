@@ -305,3 +305,93 @@ resource "aws_appautoscaling_policy" "backend_cpu" {
   }
 }
 
+# ──────────────────────────────────────────────────────────────────────────────
+# CLOUDWATCH LOG GROUP — LIVEKIT AGENT
+# ──────────────────────────────────────────────────────────────────────────────
+resource "aws_cloudwatch_log_group" "livekit_agent" {
+  name              = "/ecs/${var.project_name}-${var.environment}-livekit-agent"
+  retention_in_days = 7
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-logs-livekit-agent"
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ECS TASK DEFINITION — LIVEKIT AGENT
+# Worker saliente: conecta a LiveKit Cloud y a las APIs de STT/TTS/LLM
+# ──────────────────────────────────────────────────────────────────────────────
+resource "aws_ecs_task_definition" "livekit_agent" {
+  family                   = "${var.project_name}-${var.environment}-td-livekit-agent"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
+  task_role_arn            = data.aws_iam_role.lab_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "livekit-agent"
+      image     = var.livekit_agent_image
+      essential = true
+
+      environment = [
+        { name = "LIVEKIT_URL",        value = var.livekit_url },
+        { name = "LIVEKIT_API_KEY",    value = var.livekit_api_key },
+        { name = "LIVEKIT_API_SECRET", value = var.livekit_api_secret },
+        { name = "DEEPGRAM_API_KEY",   value = var.deepgram_api_key },
+        { name = "CARTESIA_API_KEY",   value = var.cartesia_api_key },
+        { name = "GROQ_API_KEY",       value = var.groq_api_key },
+        { name = "BACKEND_URL",        value = var.backend_internal_url }
+      ]
+
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.livekit_agent.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "livekit-agent"
+        }
+      }
+    }
+  ])
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-td-livekit-agent"
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ECS SERVICE — LIVEKIT AGENT
+# Sin load balancer: es un worker que solo hace conexiones salientes
+# ──────────────────────────────────────────────────────────────────────────────
+resource "aws_ecs_service" "livekit_agent" {
+  name            = "${var.project_name}-${var.environment}-service-livekit-agent"
+  cluster         = aws_ecs_cluster.this.id
+  task_definition = aws_ecs_task_definition.livekit_agent.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [var.livekit_agent_sg_id]
+    assign_public_ip = false
+  }
+
+  force_new_deployment = true
+
+  lifecycle {
+    ignore_changes = [desired_count]
+  }
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-service-livekit-agent"
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}

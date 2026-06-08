@@ -117,6 +117,14 @@ module "ecs" {
   livekit_api_key    = var.livekit_api_key
   livekit_api_secret = var.livekit_api_secret
 
+  # LiveKit Agent Worker (ECS Service)
+  livekit_agent_image  = var.livekit_agent_image
+  livekit_agent_sg_id  = module.security_groups.livekit_agent_sg_id
+  backend_internal_url = "http://${module.alb.internal_alb_dns}"
+  deepgram_api_key     = var.deepgram_api_key
+  cartesia_api_key     = var.cartesia_api_key
+  groq_api_key         = var.groq_api_key
+
   # Cognito Auth + Vapi (frontend — runtime inject)
   next_public_api_url          = "http://${module.alb.external_alb_dns}"
   cognito_user_pool_id         = module.cognito.user_pool_id

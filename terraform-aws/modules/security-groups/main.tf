@@ -164,3 +164,28 @@ resource "aws_security_group" "rds" {
     Environment = var.environment
   }
 }
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SECURITY GROUP: LIVEKIT AGENT (worker saliente)
+# Sin ingress: el agente nunca recibe tráfico entrante.
+# Solo hace conexiones salientes a LiveKit Cloud, Deepgram, Cartesia y Groq.
+# ──────────────────────────────────────────────────────────────────────────────
+resource "aws_security_group" "livekit_agent" {
+  name        = "${var.project_name}-${var.environment}-sg-livekit-agent"
+  description = "LiveKit voice agent worker - outbound only"
+  vpc_id      = var.vpc_id
+
+  egress {
+    description = "All outbound (LiveKit Cloud, Deepgram, Cartesia, Groq, Backend internal)"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-sg-livekit-agent"
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
