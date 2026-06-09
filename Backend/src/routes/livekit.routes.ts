@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { AccessToken } from "livekit-server-sdk";
 import { getRandomInterviewCover } from "../config/constants";
-import { createInterview, getInterviewById } from "../services/interviews.service";
+import { createInterview, getInterviewById, updateInterview } from "../services/interviews.service";
 
 const router = Router();
 
@@ -80,7 +80,27 @@ router.post("/generate", async (req: Request, res: Response): Promise<void> => {
   const finalUserId = userid || userId || "user_unknown";
 
   try {
-    const prompt = `Prepara preguntas para una entrevista de trabajo.
+    // 1. Create the interview in the database immediately as non-finalized
+    const interviewId = await createInterview({
+      role,
+      type,
+      level,
+      techstack: typeof techstack === "string" ? techstack.split(",") : (Array.isArray(techstack) ? techstack : []),
+      questions: [],
+      userId: finalUserId,
+      finalized: false,
+      coverImage: getRandomInterviewCover(),
+      createdAt: new Date().toISOString(),
+    });
+
+    // 2. Respond to the agent immediately
+    res.status(200).json({ success: true, interviewId });
+
+    // 3. Process Gemini generation asynchronously in the background
+    (async () => {
+      try {
+        console.log(`[Background Generation] Iniciando generación para entrevista ${interviewId}...`);
+        const prompt = `Prepara preguntas para una entrevista de trabajo.
 El rol es: ${role}.
 El nivel de experiencia es: ${level}.
 El stack tecnológico es: ${techstack}.
@@ -89,42 +109,42 @@ La cantidad de preguntas requeridas es: ${amount}.
 Devuelve ÚNICAMENTE un array JSON con las preguntas, sin texto adicional, sin backticks:
 ["Pregunta 1", "Pregunta 2", "Pregunta 3"]`;
 
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+        const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
-    const geminiRes = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7 },
-      }),
-    });
+        const geminiRes = await fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7 },
+          }),
+        });
 
-    if (!geminiRes.ok) {
-      throw new Error(`Gemini API error: ${geminiRes.status}`);
-    }
+        if (!geminiRes.ok) {
+          throw new Error(`Gemini API error: ${geminiRes.status}`);
+        }
 
-    const geminiData = await geminiRes.json() as any;
-    const rawText: string = geminiData.candidates[0].content.parts[0].text;
-    const cleanText = rawText.replace(/```json|```/g, "").trim();
-    const questions = JSON.parse(cleanText);
+        const geminiData = await geminiRes.json() as any;
+        const rawText: string = geminiData.candidates[0].content.parts[0].text;
+        const cleanText = rawText.replace(/```json|```/g, "").trim();
+        const questions = JSON.parse(cleanText);
 
-    const interviewId = await createInterview({
-      role,
-      type,
-      level,
-      techstack: typeof techstack === "string" ? techstack.split(",") : (Array.isArray(techstack) ? techstack : []),
-      questions,
-      userId: finalUserId,
-      finalized: true,
-      coverImage: getRandomInterviewCover(),
-      createdAt: new Date().toISOString(),
-    });
+        // Update the interview in the database with the generated questions
+        const interview = await getInterviewById(interviewId);
+        if (interview) {
+          interview.questions = questions;
+          interview.finalized = true;
+          await updateInterview(interview);
+          console.log(`[Background Generation] Entrevista ${interviewId} generada exitosamente con ${questions.length} preguntas.`);
+        }
+      } catch (bgError: any) {
+        console.error(`[Background Generation] Error en background para entrevista ${interviewId}:`, bgError?.message || bgError);
+      }
+    })();
 
-    res.status(200).json({ success: true, interviewId });
   } catch (error: any) {
-    console.error("Error en generación LiveKit:", error?.message || error);
+    console.error("Error en inicio de generación LiveKit:", error?.message || error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

@@ -80,3 +80,14 @@ export async function createInterview(
 
   return id;
 }
+
+export async function updateInterview(
+  interview: Interview
+): Promise<void> {
+  await dynamo.send(
+    new PutCommand({
+      TableName: TABLES.INTERVIEWS,
+      Item: interview,
+    })
+  );
+}
