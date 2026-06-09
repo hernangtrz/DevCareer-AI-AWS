@@ -8,7 +8,7 @@ async function callGemini(prompt: string, temperature = 0.4): Promise<any> {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
   if (!apiKey) throw new Error("Falta GOOGLE_GENERATIVE_AI_API_KEY.");
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
   const res = await fetch(apiUrl, {
     method: "POST",
@@ -94,7 +94,7 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
       throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
     const geminiRes = await fetch(apiUrl, {
       method: "POST",
@@ -159,7 +159,7 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
       throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
     }
 
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
     const geminiRes = await fetch(apiUrl, {
       method: "POST",

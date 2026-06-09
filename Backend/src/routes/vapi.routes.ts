@@ -28,7 +28,7 @@ Devuelve ÚNICAMENTE un array JSON con las preguntas, sin texto adicional, sin b
 ["Pregunta 1", "Pregunta 2", "Pregunta 3"]`;
 
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
     const geminiRes = await fetch(apiUrl, {
       method: "POST",

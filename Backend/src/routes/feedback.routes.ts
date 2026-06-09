@@ -43,7 +43,7 @@ Las 5 categorías son:
 - Confianza y Claridad`;
 
     const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
 
     console.log(`🔑 GOOGLE_GENERATIVE_AI_API_KEY (feedback) - Longitud: ${apiKey?.length || 0}, Empieza con: ${apiKey ? apiKey.substring(0, 7) : "N/A"}`);
     console.log("Enviando petición a Gemini (feedback)...");
