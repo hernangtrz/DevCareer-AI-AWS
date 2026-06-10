@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/api";
@@ -51,10 +51,17 @@ const Agent = ({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
   const [messages, setMessages] = useState<SavedMessage[]>([]);
+  // Ref para leer siempre los mensajes más recientes sin añadirlos como dep del efecto de redirección
+  const messagesRef = useRef<SavedMessage[]>([]);
   const [lkRoom, setLkRoom] = useState<Room | null>(null);
   const [selectedVoice, setSelectedVoice] = useState("jeronimo-es");
 
   const isLiveKit = process.env.NEXT_PUBLIC_VOICE_PROVIDER === "livekit";
+
+  // Mantener el ref sincronizado con el estado de mensajes
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (isLiveKit) return;
@@ -138,10 +145,14 @@ const Agent = ({
       if (type === "generate") {
         router.push("/dashboard");
       } else {
-        handleGenerateFeedback(messages);
+        // Leer mensajes desde el ref para evitar closure stale y no añadir 'messages' como dep
+        handleGenerateFeedback(messagesRef.current);
       }
     }
-  }, [messages, callStatus, type, userId]);
+    // IMPORTANTE: NO incluir 'messages' aquí para evitar que la llegada de un
+    // nuevo transcripto re-ejecute este efecto mientras la llamada está activa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callStatus, type, userId]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -170,10 +181,19 @@ const Agent = ({
         });
 
         currentRoom.on(RoomEvent.ConnectionStateChanged, (state) => {
+          console.log("[LiveKit] ConnectionState:", state);
           if (state === ConnectionState.Connected) {
             setCallStatus(CallStatus.ACTIVE);
           } else if (state === ConnectionState.Disconnected) {
-            setCallStatus(CallStatus.FINISHED);
+            // Solo marcar como FINISHED si previamente estábamos conectados (ACTIVE).
+            // Esto evita que un Disconnected transitorio durante la inicialización
+            // dispare la redirección antes de que la llamada haya comenzado.
+            setCallStatus((prev) => {
+              if (prev === CallStatus.ACTIVE || prev === CallStatus.CONNECTING) {
+                return CallStatus.FINISHED;
+              }
+              return prev;
+            });
             setLkRoom(null);
             setIsSpeaking(false);
           }
@@ -230,7 +250,9 @@ const Agent = ({
 
       } catch (err) {
         console.error("Error al iniciar llamada con LiveKit:", err);
-        setCallStatus(CallStatus.FINISHED);
+        // Usar INACTIVE en lugar de FINISHED para no disparar la redirección
+        // cuando hay un error de conexión antes de que la llamada haya iniciado.
+        setCallStatus(CallStatus.INACTIVE);
       }
     } else {
       if (type === "generate") {
