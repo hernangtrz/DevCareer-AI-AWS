@@ -264,7 +264,7 @@ export default defineAgent({
       turnHandling: {
         preemptiveGeneration: { enabled: false }, // Apaga generación especulativa
         endpointing: {
-          minDelay: 2000, // 2000ms de silencio para turno completo
+          minDelay: 1600, // 1600ms de silencio para turno completo
         },
         interruption: {
           mode: 'vad',
