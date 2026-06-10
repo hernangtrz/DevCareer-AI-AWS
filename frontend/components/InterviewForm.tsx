@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InterviewFormData {
   role: string;
@@ -16,15 +17,11 @@ interface InterviewFormProps {
 }
 
 const LEVELS = ["junior", "Semi-Senior", "Senior"] as const;
-const TYPES = [
-  { value: "tecnica", label: "Técnica" },
-  { value: "conductual", label: "Conductual" },
-  { value: "combinada", label: "Combinada" },
-] as const;
 const AMOUNTS = [2, 5, 8, 10, 15];
 
 const InterviewForm = ({ userId }: InterviewFormProps) => {
   const router = useRouter();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [customAmount, setCustomAmount] = useState("");
@@ -36,9 +33,15 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
     amount: 5,
   });
 
+  const localizedTypes = [
+    { value: "tecnica", label: t("form_type_tech") },
+    { value: "conductual", label: t("form_type_beh") },
+    { value: "combinada", label: t("form_type_comb") },
+  ] as const;
+
   const handleSubmit = async () => {
     if (!form.role.trim() || !form.techstack.trim()) {
-      setError("Por favor completa todos los campos.");
+      setError(t("form_error_required"));
       return;
     }
     setError("");
@@ -57,7 +60,7 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
       if (!res.ok) throw new Error("Error al generar la entrevista.");
       router.push("/dashboard");
     } catch (e) {
-      setError("Ocurrió un error. Intenta de nuevo.");
+      setError(t("form_error_generic"));
     } finally {
       setLoading(false);
     }
@@ -68,43 +71,43 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
       <div className="card-border">
         <div className="card p-8 flex flex-col gap-6">
           {/* Header */}
-          <div className="flex flex-col gap-1">
-            <h3 className="text-primary-100">Configura tu entrevista</h3>
+          <div className="flex flex-col gap-1 text-left">
+            <h3 className="text-primary-100">{t("form_title")}</h3>
             <p className="text-sm text-light-400">
-              Completa los datos para generar preguntas personalizadas
+              {t("form_subtitle")}
             </p>
           </div>
 
           {/* Role */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 text-left">
             <label className="text-sm text-light-100 font-medium">
-              Rol / Puesto
+              {t("form_role_label")}
             </label>
             <input
               className="bg-dark-200 rounded-full min-h-12 px-5 text-white placeholder:text-light-600 border border-input focus:outline-none focus:border-primary-200 transition-colors"
-              placeholder="Ej: Frontend Developer, Backend, Fullstack..."
+              placeholder={t("form_role_placeholder")}
               value={form.role}
               onChange={(e) => setForm({ ...form, role: e.target.value })}
             />
           </div>
 
           {/* Techstack */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 text-left">
             <label className="text-sm text-light-100 font-medium">
-              Tecnologías
+              {t("form_tech_label")}
             </label>
             <input
               className="bg-dark-200 rounded-full min-h-12 px-5 text-white placeholder:text-light-600 border border-input focus:outline-none focus:border-primary-200 transition-colors"
-              placeholder="Ej: React, Node.js, TypeScript, PostgreSQL..."
+              placeholder={t("form_tech_placeholder")}
               value={form.techstack}
               onChange={(e) => setForm({ ...form, techstack: e.target.value })}
             />
           </div>
 
           {/* Level */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 text-left">
             <label className="text-sm text-light-100 font-medium">
-              Nivel de experiencia
+              {t("form_level_label")}
             </label>
             <div className="flex gap-3 flex-wrap">
               {LEVELS.map((level) => (
@@ -124,12 +127,12 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
           </div>
 
           {/* Type */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 text-left">
             <label className="text-sm text-light-100 font-medium">
-              Tipo de entrevista
+              {t("form_type_label")}
             </label>
             <div className="flex gap-3 flex-wrap">
-              {TYPES.map(({ value, label }) => (
+              {localizedTypes.map(({ value, label }) => (
                 <button
                   key={value}
                   onClick={() => setForm({ ...form, type: value })}
@@ -146,9 +149,9 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
           </div>
 
           {/* Amount */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 text-left">
             <label className="text-sm text-light-100 font-medium">
-              Número de preguntas
+              {t("form_questions_label")}
             </label>
             <div className="flex gap-3 flex-wrap items-center">
               {AMOUNTS.map((n) => (
@@ -172,7 +175,7 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
                   type="number"
                   min={1}
                   max={30}
-                  placeholder="Otro"
+                  placeholder={t("form_questions_placeholder")}
                   value={customAmount}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -186,7 +189,7 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
                 />
               </div>
             </div>
-            <p className="text-xs text-light-600">Elige una opción o escribe entre 1 y 30 preguntas.</p>
+            <p className="text-xs text-light-600">{t("form_questions_desc")}</p>
           </div>
 
           {/* Error */}
@@ -200,7 +203,7 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
             disabled={loading}
             className="btn-primary w-full min-h-12 flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {loading ? "Generando entrevista..." : "Generar entrevista"}
+            {loading ? t("form_btn_generating") : t("form_btn_generate")}
           </button>
         </div>
       </div>

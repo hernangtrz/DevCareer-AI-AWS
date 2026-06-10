@@ -11,6 +11,15 @@ interface Feedback {
   areasForImprovement: string[];
   finalAssessment: string;
   createdAt: string;
+  englishFeedback?: {
+    overallLevel: string;      // CEFR: A1, A2, B1, B2, C1, C2
+    grammarScore: number;      // 0-100
+    vocabularyScore: number;   // 0-100
+    fluencyScore: number;      // 0-100
+    grammarErrors: string[];   // ejemplos de errores gramaticales detectados
+    vocabularySuggestions: string[]; // palabras/frases que podría mejorar
+    overallComment: string;    // resumen del nivel de inglés
+  };
 }
 
 interface Interview {

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOutCognito } from "@/lib/cognito";
 import { LogOut, User, ChevronDown } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UserMenuProps {
   name: string;
@@ -15,6 +16,7 @@ const UserMenu = ({ name, email }: UserMenuProps) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
+  const { language, setLanguage, t } = useLanguage();
 
   // Cierra el menú al hacer clic fuera
   useEffect(() => {
@@ -91,17 +93,47 @@ const UserMenu = ({ name, email }: UserMenuProps) => {
           </div>
 
           {/* Opciones */}
-          <div className="p-1.5">
+          <div className="p-1.5 flex flex-col gap-1">
+            {/* Selector de idioma */}
+            <div className="flex items-center justify-between px-3 py-2 rounded-xl text-sm text-light-100 bg-dark-200/50 border border-input/10">
+              <span className="font-medium flex items-center gap-1.5">
+                🌐 {t("menu_language")}
+              </span>
+              <div className="flex bg-dark-300 rounded-full p-0.5 border border-input">
+                <button
+                  onClick={() => setLanguage("es")}
+                  className={`px-2 py-0.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    language === "es"
+                      ? "bg-primary-200 text-dark-100"
+                      : "text-light-400 hover:text-light-100"
+                  }`}
+                >
+                  ES
+                </button>
+                <button
+                  onClick={() => setLanguage("en")}
+                  className={`px-2 py-0.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                    language === "en"
+                      ? "bg-primary-200 text-dark-100"
+                      : "text-light-400 hover:text-light-100"
+                  }`}
+                >
+                  EN
+                </button>
+              </div>
+            </div>
+
+            {/* Cerrar sesión */}
             <button
               onClick={handleLogout}
               disabled={loading}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-light-100 hover:bg-dark-200 hover:text-red-400 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-light-100 hover:bg-dark-200 hover:text-red-400 transition-all group disabled:opacity-50 disabled:cursor-not-allowed text-left"
             >
-              <div className="w-7 h-7 rounded-lg bg-dark-200 group-hover:bg-red-500/10 flex items-center justify-center transition-colors">
+              <div className="w-7 h-7 rounded-lg bg-dark-200 group-hover:bg-red-500/10 flex items-center justify-center transition-colors shrink-0">
                 <LogOut className="h-4 w-4 text-light-400 group-hover:text-red-400 transition-colors" />
               </div>
               <span className="font-medium">
-                {loading ? "Cerrando sesión..." : "Cerrar sesión"}
+                {loading ? t("menu_signingout") : t("menu_signout")}
               </span>
             </button>
           </div>

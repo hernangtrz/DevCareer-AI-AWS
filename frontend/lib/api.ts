@@ -150,6 +150,7 @@ export async function createFeedback(
   params: {
     interviewId: string;
     transcript: { role: string; content: string }[];
+    language?: string;
   },
   bearerToken: string,
 ): Promise<{ success: boolean; feedbackId?: string }> {

@@ -6,31 +6,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import InterviewCard from "@/components/InterviewCard";
-import { getCurrentUser, getSessionCookie } from "@/lib/api.server";
+import { getCurrentUser, getSessionCookie, getLanguageCookie } from "@/lib/api.server";
 import { getInterviewsByUserId } from "@/lib/api";
 import { interviewTemplates } from "@/constants";
 import { FileText, Search, ArrowRight } from "lucide-react";
-
-const moduleCards = [
-  {
-    icon: <FileText className="h-5 w-5" />,
-    title: "Crear CV con IA",
-    description: "Genera tu hoja de vida profesional adaptada al rol que buscas.",
-    href: "/cv-creator",
-    badge: "Nuevo",
-    color: "from-violet-500/20 to-violet-600/5 border-violet-500/20",
-    iconColor: "text-violet-400",
-  },
-  {
-    icon: <Search className="h-5 w-5" />,
-    title: "Analizar CV con IA",
-    description: "Compara tu CV contra una oferta laboral y obtén tu score ATS.",
-    href: "/cv-analyzer",
-    badge: "Nuevo",
-    color: "from-fuchsia-500/20 to-fuchsia-600/5 border-fuchsia-500/20",
-    iconColor: "text-fuchsia-400",
-  },
-];
+import { translations } from "@/lib/translations";
 
 const Page = async () => {
   const user = await getCurrentUser();
@@ -40,14 +20,38 @@ const Page = async () => {
   const userInterviews = await getInterviewsByUserId(sessionCookie);
   const hasPastInterviews = userInterviews && userInterviews.length > 0;
 
+  const lang = await getLanguageCookie();
+  const t = translations[lang];
+
+  const moduleCards = [
+    {
+      icon: <FileText className="h-5 w-5" />,
+      title: t.dash_cv_builder_title,
+      description: t.dash_cv_builder_desc,
+      href: "/cv-creator",
+      badge: t.nav_new,
+      color: "from-violet-500/20 to-violet-600/5 border-violet-500/20",
+      iconColor: "text-violet-400",
+    },
+    {
+      icon: <Search className="h-5 w-5" />,
+      title: t.dash_cv_analyzer_title,
+      description: t.dash_cv_analyzer_desc,
+      href: "/cv-analyzer",
+      badge: t.nav_new,
+      color: "from-fuchsia-500/20 to-fuchsia-600/5 border-fuchsia-500/20",
+      iconColor: "text-fuchsia-400",
+    },
+  ];
+
   return (
     <>
       <section className="card-cta">
         <div className="flex flex-col gap-6 max-w-lg">
-          <h2>Prepárate para tus entrevistas con práctica y retroalimentación impulsada por IA</h2>
-          <p className="text-lg">Practica con preguntas reales de entrevistas y obtén retroalimentación instantánea</p>
+          <h2>{t.dash_hero_title}</h2>
+          <p className="text-lg">{t.dash_hero_subtitle}</p>
           <Button asChild className="btn-primary max-sm:w-full">
-            <Link href="/interview">Iniciar una entrevista</Link>
+            <Link href="/interview">{t.dash_start_interview}</Link>
           </Button>
         </div>
         <Image
@@ -62,8 +66,8 @@ const Page = async () => {
 
       <section className="flex flex-col gap-6 mt-8">
         <div className="flex items-center gap-3">
-          <h2>Otros módulos</h2>
-          <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold">Nuevas herramientas</span>
+          <h2>{t.dash_other_modules}</h2>
+          <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold">{t.dash_new_tools}</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {moduleCards.map((m) => (
@@ -84,18 +88,18 @@ const Page = async () => {
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Tus entrevistas</h2>
+        <h2>{t.dash_my_interviews}</h2>
         <div className="interviews-section">
           {hasPastInterviews
             ? userInterviews?.map((interview) => (
                 <InterviewCard {...interview} key={interview.id} currentUserId={user.id} />
               ))
-            : <p>Aún no has realizado ninguna entrevista</p>}
+            : <p>{t.dash_no_interviews}</p>}
         </div>
       </section>
 
       <section className="flex flex-col gap-6 mt-8">
-        <h2>Plantillas de entrevistas</h2>
+        <h2>{t.dash_templates}</h2>
         <div className="interviews-section">
           {interviewTemplates.map((template) => (
             <InterviewCard {...template} key={template.id} isTemplate={true} currentUserId={user?.id} />

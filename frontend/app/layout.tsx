@@ -3,6 +3,7 @@ import { Mona_Sans } from "next/font/google";
 
 import "./globals.css";
 import { Toaster } from "sonner";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
@@ -23,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <body className={`${monaSans.className} antialiased pattern`}>
-        {children}
+        <LanguageProvider>
+          {children}
 
-        <Toaster />
+          <Toaster />
+        </LanguageProvider>
       </body>
     </html>
   );

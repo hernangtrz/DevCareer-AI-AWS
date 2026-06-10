@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Agent from "@/components/Agent";
 import InterviewForm from "@/components/InterviewForm";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface InterviewPageProps {
   userName: string;
@@ -11,15 +12,16 @@ interface InterviewPageProps {
 
 const InterviewPage = ({ userName, userId }: InterviewPageProps) => {
   const [mode, setMode] = useState<"form" | "agent">("form");
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-2xl mx-auto">
       <div className="flex flex-col items-center gap-2 text-center">
-        <h3>Genera tu entrevista</h3>
+        <h3>{t("int_title")}</h3>
         <p className="text-light-400 text-sm">
           {mode === "form"
-            ? "Completa el formulario para crear una entrevista personalizada"
-            : "Habla con el agente de voz para configurar tu entrevista"}
+            ? t("int_form_mode_desc")
+            : t("int_agent_mode_desc")}
         </p>
       </div>
 
@@ -33,7 +35,7 @@ const InterviewPage = ({ userName, userId }: InterviewPageProps) => {
               : "text-light-400 hover:text-light-100"
           }`}
         >
-          Formulario
+          {t("int_mode_form")}
         </button>
         <button
           onClick={() => setMode("agent")}
@@ -43,7 +45,7 @@ const InterviewPage = ({ userName, userId }: InterviewPageProps) => {
               : "text-light-400 hover:text-light-100"
           }`}
         >
-          Agente de voz
+          {t("int_mode_agent")}
         </button>
       </div>
 

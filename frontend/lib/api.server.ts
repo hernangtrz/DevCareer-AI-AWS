@@ -86,3 +86,13 @@ export async function getSessionCookie(): Promise<string> {
     return "";
   }
 }
+
+export async function getLanguageCookie(): Promise<"es" | "en"> {
+  try {
+    const cookieStore = await cookies();
+    const lang = cookieStore.get("app_language")?.value;
+    return (lang === "es" || lang === "en") ? lang : "es";
+  } catch {
+    return "es";
+  }
+}

@@ -251,10 +251,14 @@ export default defineAgent({
         apiKey: process.env.GROQ_API_KEY,
       }),
       // Cartesia TTS dinámico según la voz elegida
+      // sonic-2: más estable que sonic-3.5 en streaming de LiveKit (menos choppy)
+      // pcm_s16le + 16000Hz: codec lineal sin compresión que elimina artefactos de decodificación
       tts: new cartesia.TTS({
-        model: 'sonic-3.5',
+        model: 'sonic-2',
         voice: config.voice,
         language: config.language,
+        encoding: 'pcm_s16le',
+        sampleRate: 16000,
       }),
       // Configuración de turnos súper estable para evitar silencios / congelamientos
       turnHandling: {

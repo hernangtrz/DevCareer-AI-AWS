@@ -109,10 +109,14 @@ const Agent = ({
 
       const cleanMsgs = msgs.map(({ role, content }) => ({ role, content }));
 
+      const voiceOpt = VOICE_OPTIONS.find((opt) => opt.key === selectedVoice);
+      const language = voiceOpt ? voiceOpt.lang : "es";
+
       const { success, feedbackId: id } = await createFeedback(
         {
           interviewId: interviewId!,
           transcript: cleanMsgs,
+          language,
         },
         idToken,
       );
