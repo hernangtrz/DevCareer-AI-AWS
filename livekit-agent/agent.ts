@@ -18,20 +18,20 @@ const VOICE_MAP: Record<string, { voice: string; language: string; name: string 
     language: 'es',
     name: 'Alejandro'
   },
-  'daniela-es': {
-    voice: '5c5ad5e7-1020-476b-8b91-fdcbe9cc313c', // Daniela (Mexican Spanish)
+  'catalina-es': {
+    voice: '162e0f37-8504-474c-bb33-c606c01890dc', // Catalina (Spanish)
     language: 'es',
-    name: 'Daniela'
+    name: 'Catalina'
   },
-  'brooke-en': {
-    voice: 'e07c00bc-4134-4eae-9ea4-1a55fb45746b', // Brooke (English US)
+  'katie-en': {
+    voice: 'f786b574-daa5-4673-aa0c-cbe3e8534c02', // Katie (English US)
     language: 'en',
-    name: 'Brooke'
+    name: 'Katie'
   },
-  'australian-en': {
-    voice: 'ee7ea9f8-c0c1-498c-9279-764d6b56d189', // Friendly Australian Man (English)
+  'corey-en': {
+    voice: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4', // Corey (English US)
     language: 'en',
-    name: 'Oliver'
+    name: 'Corey'
   }
 };
 
