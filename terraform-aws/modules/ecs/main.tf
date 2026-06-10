@@ -202,6 +202,7 @@ resource "aws_ecs_service" "frontend" {
   deployment_maximum_percent         = 200
 
   force_new_deployment = true
+  wait_for_steady_state = false
 
   lifecycle {
     ignore_changes = [desired_count]
@@ -240,6 +241,7 @@ resource "aws_ecs_service" "backend" {
   deployment_maximum_percent         = 200
 
   force_new_deployment = true
+  wait_for_steady_state = false
 
   lifecycle {
     ignore_changes = [desired_count]
@@ -385,6 +387,7 @@ resource "aws_ecs_service" "livekit_agent" {
   }
 
   force_new_deployment = true
+  wait_for_steady_state = false
 
   lifecycle {
     ignore_changes = [desired_count]
