@@ -185,11 +185,12 @@ const Agent = ({
           if (state === ConnectionState.Connected) {
             setCallStatus(CallStatus.ACTIVE);
           } else if (state === ConnectionState.Disconnected) {
-            // Solo marcar como FINISHED si previamente estábamos conectados (ACTIVE).
-            // Esto evita que un Disconnected transitorio durante la inicialización
-            // dispare la redirección antes de que la llamada haya comenzado.
+            // Solo marcar como FINISHED si la llamada estaba ACTIVA.
+            // Ignorar Disconnected durante CONNECTING (puede ocurrir normalmente
+            // en LiveKit durante la negociación inicial) para no disparar
+            // la redirección antes de que la llamada haya comenzado.
             setCallStatus((prev) => {
-              if (prev === CallStatus.ACTIVE || prev === CallStatus.CONNECTING) {
+              if (prev === CallStatus.ACTIVE) {
                 return CallStatus.FINISHED;
               }
               return prev;
@@ -245,13 +246,23 @@ const Agent = ({
         });
 
         await currentRoom.connect(url, token);
-        await currentRoom.localParticipant.setMicrophoneEnabled(true);
+        // Guardar referencia a la sala inmediatamente tras conectar.
+        // Esto asegura que lkRoom esté disponible aunque falle la siguiente línea.
         setLkRoom(currentRoom);
+
+        // Habilitar micrófono en un bloque separado para que un error de permisos
+        // NO revierta el callStatus a INACTIVE (la sala ya está conectada y ACTIVE).
+        try {
+          await currentRoom.localParticipant.setMicrophoneEnabled(true);
+        } catch (micErr) {
+          console.warn("[LiveKit] No se pudo habilitar el micrófono (¿permisos denegados?):", micErr);
+          // No cambiamos el callStatus: la llamada sigue activa aunque sin micrófono local.
+        }
 
       } catch (err) {
         console.error("Error al iniciar llamada con LiveKit:", err);
-        // Usar INACTIVE en lugar de FINISHED para no disparar la redirección
-        // cuando hay un error de conexión antes de que la llamada haya iniciado.
+        // Solo llegamos aquí si falló connect() (antes de estar ACTIVE).
+        // Usamos INACTIVE para no disparar la redirección del efecto FINISHED.
         setCallStatus(CallStatus.INACTIVE);
       }
     } else {
