@@ -34,10 +34,10 @@ interface SavedMessage {
 }
 
 const VOICE_OPTIONS = [
-  { key: "jeronimo-es", label: "Alejandro (Español LatAm - Hombre)", lang: "es" },
-  { key: "daniela-es", label: "Daniela (Español México - Dama)", lang: "es" },
-  { key: "brooke-en", label: "Brooke (Inglés US - Dama)", lang: "en" },
-  { key: "australian-en", label: "Oliver (Inglés Australia - Hombre)", lang: "en" },
+  { key: "jeronimo-es", label: "Alejandro — Español LatAm (Hombre)", lang: "es" },
+  { key: "catalina-es", label: "Catalina — Español LatAm (Mujer)", lang: "es" },
+  { key: "katie-en",    label: "Katie — English US (Female)", lang: "en" },
+  { key: "corey-en",   label: "Corey — English US (Male)", lang: "en" },
 ];
 
 const Agent = ({
