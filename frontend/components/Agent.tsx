@@ -36,8 +36,8 @@ interface SavedMessage {
 const VOICE_OPTIONS = [
   { key: "jeronimo-es", label: "Alejandro — Español LatAm (Hombre)", lang: "es" },
   { key: "catalina-es", label: "Catalina — Español LatAm (Mujer)", lang: "es" },
-  { key: "katie-en",    label: "Katie — English US (Female)", lang: "en" },
-  { key: "corey-en",   label: "Corey — English US (Male)", lang: "en" },
+  { key: "katie-en", label: "Katie — English US (Female)", lang: "en" },
+  { key: "daniel-en", label: "Daniel — English US (Male)", lang: "en" },
 ];
 
 const Agent = ({

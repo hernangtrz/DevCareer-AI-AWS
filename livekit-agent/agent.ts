@@ -28,10 +28,10 @@ const VOICE_MAP: Record<string, { voice: string; language: string; name: string 
     language: 'en',
     name: 'Katie'
   },
-  'corey-en': {
-    voice: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4', // Corey (English US)
+  'daniel-en': {
+    voice: '47c38ca4-5f35-497b-b1a3-415245fb35e1', // Corey (English US)
     language: 'en',
-    name: 'Corey'
+    name: 'Daniel'
   }
 };
 
