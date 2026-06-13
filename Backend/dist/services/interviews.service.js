@@ -4,6 +4,7 @@ exports.getInterviewsByUserId = getInterviewsByUserId;
 exports.getLatestInterviews = getLatestInterviews;
 exports.getInterviewById = getInterviewById;
 exports.createInterview = createInterview;
+exports.updateInterview = updateInterview;
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const dynamo_1 = require("../config/dynamo");
 const uuid_1 = require("uuid");
@@ -51,5 +52,11 @@ async function createInterview(interview) {
         Item: item,
     }));
     return id;
+}
+async function updateInterview(interview) {
+    await dynamo_1.dynamo.send(new lib_dynamodb_1.PutCommand({
+        TableName: dynamo_1.TABLES.INTERVIEWS,
+        Item: interview,
+    }));
 }
 //# sourceMappingURL=interviews.service.js.map

@@ -9,7 +9,6 @@ const cors_1 = __importDefault(require("cors"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const interviews_routes_1 = __importDefault(require("./routes/interviews.routes"));
 const feedback_routes_1 = __importDefault(require("./routes/feedback.routes"));
-const vapi_routes_1 = __importDefault(require("./routes/vapi.routes"));
 const livekit_routes_1 = __importDefault(require("./routes/livekit.routes"));
 const cv_routes_1 = __importDefault(require("./routes/cv.routes"));
 const app = (0, express_1.default)();
@@ -29,7 +28,6 @@ app.get("/health", (_req, res) => {
 app.use("/auth", auth_routes_1.default);
 app.use("/interviews", interviews_routes_1.default);
 app.use("/feedback", feedback_routes_1.default);
-app.use("/api/vapi", vapi_routes_1.default);
 app.use("/api/livekit", livekit_routes_1.default);
 app.use("/api/cv", cv_routes_1.default);
 // ── Manejo de rutas no encontradas ─────────────────────────────────────────────

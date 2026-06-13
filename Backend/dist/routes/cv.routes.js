@@ -2,6 +2,34 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const router = (0, express_1.Router)();
+// ── Helper: llamada a Gemini ──────────────────────────────────────────────────
+async function callGemini(prompt, temperature = 0.4) {
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+    if (!apiKey)
+        throw new Error("Falta GOOGLE_GENERATIVE_AI_API_KEY.");
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+    const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature,
+                responseMimeType: "application/json",
+            },
+        }),
+    });
+    if (!res.ok) {
+        const errBody = await res.text();
+        throw new Error(`Gemini API error ${res.status}: ${errBody}`);
+    }
+    const data = (await res.json());
+    const rawText = data.candidates[0].content.parts[0].text;
+    const cleanText = rawText.replace(/```json|```/g, "").trim();
+    return JSON.parse(cleanText);
+}
+// NOTE: /api/cv/analyze is handled directly by the Next.js server route
+// (frontend/app/api/cv/analyze/route.ts) using Gemini multimodal PDF support.
 // POST /api/cv/improve - Optimizar hoja de vida con Gemini AI
 router.post("/improve", async (req, res) => {
     const { personalInfo, experiences, skills, education, targetRole, language, profileText, translate } = req.body;
@@ -56,7 +84,7 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
         if (!apiKey) {
             throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
         }
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
         const geminiRes = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -114,7 +142,7 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
         if (!apiKey) {
             throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
         }
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
         const geminiRes = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

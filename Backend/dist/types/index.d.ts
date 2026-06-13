@@ -29,6 +29,15 @@ export interface Feedback {
     areasForImprovement: string[];
     finalAssessment: string;
     createdAt: string;
+    englishFeedback?: {
+        overallLevel: string;
+        grammarScore: number;
+        vocabularyScore: number;
+        fluencyScore: number;
+        grammarErrors: string[];
+        vocabularySuggestions: string[];
+        overallComment: string;
+    };
 }
 export interface CreateFeedbackParams {
     interviewId: string;

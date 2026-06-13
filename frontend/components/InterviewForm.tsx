@@ -51,7 +51,7 @@ const InterviewForm = ({ userId }: InterviewFormProps) => {
       const apiUrl = typeof window !== "undefined"
         ? "/api/proxy"
         : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const res = await fetch(`${apiUrl}/api/vapi/generate`, {
+      const res = await fetch(`${apiUrl}/api/livekit/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, userid: userId }),

@@ -4,8 +4,6 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { vapi } from "@/lib/vapi.sdk";
-import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/api";
 import { getCognitoIdToken } from "@/lib/cognito";
 import {
@@ -56,47 +54,10 @@ const Agent = ({
   const [lkRoom, setLkRoom] = useState<Room | null>(null);
   const [selectedVoice, setSelectedVoice] = useState("jeronimo-es");
 
-  const isLiveKit = process.env.NEXT_PUBLIC_VOICE_PROVIDER === "livekit";
-
   // Mantener el ref sincronizado con el estado de mensajes
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
-
-  useEffect(() => {
-    if (isLiveKit) return;
-
-    const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-    const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
-
-    const onMessage = (message: Message) => {
-      if (message.type === "transcript" && message.transcriptType === "final") {
-        const newMessage = { role: message.role, content: message.transcript };
-        setMessages((prev) => [...prev, newMessage]);
-      }
-    };
-
-    const onSpeechStart = () => setIsSpeaking(true);
-    const onSpeechEnd = () => setIsSpeaking(false);
-
-    const onError = (error: Error) => console.log("Error", error);
-
-    vapi.on("call-start", onCallStart);
-    vapi.on("call-end", onCallEnd);
-    vapi.on("message", onMessage);
-    vapi.on("speech-start", onSpeechStart);
-    vapi.on("speech-end", onSpeechEnd);
-    vapi.on("error", onError);
-
-    return () => {
-      vapi.off("call-start", onCallStart);
-      vapi.off("call-end", onCallEnd);
-      vapi.off("message", onMessage);
-      vapi.off("speech-start", onSpeechStart);
-      vapi.off("speech-end", onSpeechEnd);
-      vapi.off("error", onError);
-    };
-  }, [isLiveKit]);
 
   useEffect(() => {
     return () => {
@@ -157,149 +118,108 @@ const Agent = ({
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
 
-    if (isLiveKit) {
-      try {
-        const roomName = type === "generate"
-          ? `generate_${userId || "unknown"}_${selectedVoice}_${Date.now()}`
-          : `interview_${interviewId || "unknown"}_${selectedVoice}_${Date.now()}`;
-        const identity = `developer_${userId || Math.floor(Math.random() * 1000)}`;
+    try {
+      const roomName = type === "generate"
+        ? `generate_${userId || "unknown"}_${selectedVoice}_${Date.now()}`
+        : `interview_${interviewId || "unknown"}_${selectedVoice}_${Date.now()}`;
+      const identity = `developer_${userId || Math.floor(Math.random() * 1000)}`;
 
-        const apiUrl = typeof window !== "undefined"
-          ? "/api/proxy"
-          : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-        const tokenResponse = await fetch(`${apiUrl}/api/livekit/token?room=${roomName}&identity=${identity}`);
+      const apiUrl = typeof window !== "undefined"
+        ? "/api/proxy"
+        : process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const tokenResponse = await fetch(`${apiUrl}/api/livekit/token?room=${roomName}&identity=${identity}`);
 
-        if (!tokenResponse.ok) {
-          throw new Error("No se pudo obtener el token de LiveKit.");
-        }
+      if (!tokenResponse.ok) {
+        throw new Error("No se pudo obtener el token de LiveKit.");
+      }
 
-        const { token, url } = await tokenResponse.json();
+      const { token, url } = await tokenResponse.json();
 
-        const currentRoom = new Room({
-          adaptiveStream: true,
-          dynacast: true,
-        });
+      const currentRoom = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+      });
 
-        currentRoom.on(RoomEvent.ConnectionStateChanged, (state) => {
-          console.log("[LiveKit] ConnectionState:", state);
-          if (state === ConnectionState.Connected) {
-            setCallStatus(CallStatus.ACTIVE);
-          } else if (state === ConnectionState.Disconnected) {
-            // Solo marcar como FINISHED si la llamada estaba ACTIVA.
-            // Ignorar Disconnected durante CONNECTING (puede ocurrir normalmente
-            // en LiveKit durante la negociación inicial) para no disparar
-            // la redirección antes de que la llamada haya comenzado.
-            setCallStatus((prev) => {
-              if (prev === CallStatus.ACTIVE) {
-                return CallStatus.FINISHED;
-              }
-              return prev;
-            });
-            setLkRoom(null);
-            setIsSpeaking(false);
-          }
-        });
-
-        currentRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-          if (track.kind === Track.Kind.Audio) {
-            const element = track.attach();
-            document.body.appendChild(element);
-            console.log(`[Audio Subscribed] Reproduciendo audio de: ${participant.identity}`);
-          }
-        });
-
-        currentRoom.on(RoomEvent.TrackUnsubscribed, (track) => {
-          track.detach().forEach((element) => element.remove());
-        });
-
-        currentRoom.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
-          const isAgentSpeaking = speakers.some(
-            (s) => !s.identity.startsWith("developer_") && s instanceof RemoteParticipant
-          );
-          setIsSpeaking(isAgentSpeaking);
-        });
-
-        currentRoom.on(RoomEvent.TranscriptionReceived, (segments: TranscriptionSegment[], participant?: Participant) => {
-          if (!participant) return;
-          const isSelf = participant instanceof LocalParticipant;
-          const sender = isSelf ? "user" : "agent";
-
-          setMessages((prev) => {
-            const newMessages = [...prev];
-            segments.forEach((segment) => {
-              const index = newMessages.findIndex((m) => m.id === segment.id);
-              if (index !== -1) {
-                newMessages[index] = {
-                  ...newMessages[index],
-                  content: segment.text,
-                };
-              } else if (segment.text.trim()) {
-                newMessages.push({
-                  id: segment.id,
-                  role: sender === "agent" ? "assistant" : "user",
-                  content: segment.text,
-                });
-              }
-            });
-            return newMessages;
+      currentRoom.on(RoomEvent.ConnectionStateChanged, (state) => {
+        console.log("[LiveKit] ConnectionState:", state);
+        if (state === ConnectionState.Connected) {
+          setCallStatus(CallStatus.ACTIVE);
+        } else if (state === ConnectionState.Disconnected) {
+          setCallStatus((prev) => {
+            if (prev === CallStatus.ACTIVE) {
+              return CallStatus.FINISHED;
+            }
+            return prev;
           });
-        });
-
-        await currentRoom.connect(url, token);
-        // Guardar referencia a la sala inmediatamente tras conectar.
-        // Esto asegura que lkRoom esté disponible aunque falle la siguiente línea.
-        setLkRoom(currentRoom);
-
-        // Habilitar micrófono en un bloque separado para que un error de permisos
-        // NO revierta el callStatus a INACTIVE (la sala ya está conectada y ACTIVE).
-        try {
-          await currentRoom.localParticipant.setMicrophoneEnabled(true);
-        } catch (micErr) {
-          console.warn("[LiveKit] No se pudo habilitar el micrófono (¿permisos denegados?):", micErr);
-          // No cambiamos el callStatus: la llamada sigue activa aunque sin micrófono local.
+          setLkRoom(null);
+          setIsSpeaking(false);
         }
+      });
 
-      } catch (err) {
-        console.error("Error al iniciar llamada con LiveKit:", err);
-        // Solo llegamos aquí si falló connect() (antes de estar ACTIVE).
-        // Usamos INACTIVE para no disparar la redirección del efecto FINISHED.
-        setCallStatus(CallStatus.INACTIVE);
-      }
-    } else {
-      if (type === "generate") {
-        await vapi.start(process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID!, {
-          variableValues: {
-            username: userName,
-            userid: userId,
-            userId: userId,
-          },
-        });
-      } else {
-        let formattedQuestions = "";
-
-        if (questions) {
-          formattedQuestions = questions
-            .map((question) => `- ${question}`)
-            .join("\n");
+      currentRoom.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === Track.Kind.Audio) {
+          const element = track.attach();
+          document.body.appendChild(element);
+          console.log(`[Audio Subscribed] Reproduciendo audio de: ${participant.identity}`);
         }
+      });
 
-        await vapi.start(interviewer, {
-          variableValues: {
-            questions: formattedQuestions,
-          },
+      currentRoom.on(RoomEvent.TrackUnsubscribed, (track) => {
+        track.detach().forEach((element) => element.remove());
+      });
+
+      currentRoom.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+        const isAgentSpeaking = speakers.some(
+          (s) => !s.identity.startsWith("developer_") && s instanceof RemoteParticipant
+        );
+        setIsSpeaking(isAgentSpeaking);
+      });
+
+      currentRoom.on(RoomEvent.TranscriptionReceived, (segments: TranscriptionSegment[], participant?: Participant) => {
+        if (!participant) return;
+        const isSelf = participant instanceof LocalParticipant;
+        const sender = isSelf ? "user" : "agent";
+
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          segments.forEach((segment) => {
+            const index = newMessages.findIndex((m) => m.id === segment.id);
+            if (index !== -1) {
+              newMessages[index] = {
+                ...newMessages[index],
+                content: segment.text,
+              };
+            } else if (segment.text.trim()) {
+              newMessages.push({
+                id: segment.id,
+                role: sender === "agent" ? "assistant" : "user",
+                content: segment.text,
+              });
+            }
+          });
+          return newMessages;
         });
+      });
+
+      await currentRoom.connect(url, token);
+      setLkRoom(currentRoom);
+
+      try {
+        await currentRoom.localParticipant.setMicrophoneEnabled(true);
+      } catch (micErr) {
+        console.warn("[LiveKit] No se pudo habilitar el micrófono (¿permisos denegados?):", micErr);
       }
+
+    } catch (err) {
+      console.error("Error al iniciar llamada con LiveKit:", err);
+      setCallStatus(CallStatus.INACTIVE);
     }
   };
 
   const handleDisconnect = async () => {
     setCallStatus(CallStatus.FINISHED);
-    if (isLiveKit) {
-      if (lkRoom) {
-        lkRoom.disconnect();
-      }
-    } else {
-      vapi.stop();
+    if (lkRoom) {
+      lkRoom.disconnect();
     }
   };
 
@@ -307,17 +227,14 @@ const Agent = ({
   const isCallInactiveOrFinished =
     callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
 
-  // --- Pantalla de carga de feedback ---
   if (callStatus === CallStatus.GENERATING_FEEDBACK) {
     return (
       <div className="flex flex-col items-center justify-center gap-8 py-16">
-        {/* Spinner animado */}
         <div className="relative flex items-center justify-center">
           <div className="w-24 h-24 rounded-full border-4 border-dark-200 border-t-primary-200 animate-spin" />
           <div className="absolute w-16 h-16 rounded-full border-4 border-dark-200 border-b-primary-200 animate-spin" style={{ animationDirection: "reverse", animationDuration: "0.9s" }} />
         </div>
 
-        {/* Texto de estado */}
         <div className="flex flex-col items-center gap-3 text-center">
           <h3 className="text-primary-100 text-xl font-semibold">
             Analizando tu entrevista...
@@ -329,7 +246,6 @@ const Agent = ({
           </p>
         </div>
 
-        {/* Barra de progreso indeterminada */}
         <div className="w-64 h-1.5 bg-dark-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-primary-200 rounded-full"
@@ -352,32 +268,30 @@ const Agent = ({
 
   return (
     <>
-      {isLiveKit && (
-        <div className="flex justify-end mb-5">
-          <div className="flex flex-col gap-1.5 w-64">
-            <label className="text-light-400 text-xs font-semibold">Idioma / Voz del Entrevistador</label>
-            <select
-              value={selectedVoice}
-              onChange={(e) => setSelectedVoice(e.target.value)}
-              disabled={callStatus === CallStatus.CONNECTING || callStatus === CallStatus.ACTIVE}
-              className="bg-dark-300 text-light-100 border border-dark-100 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary-200 disabled:opacity-50 transition-all cursor-pointer"
-            >
-              {VOICE_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key} className="bg-dark-300 text-light-100">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="flex justify-end mb-5">
+        <div className="flex flex-col gap-1.5 w-64">
+          <label className="text-light-400 text-xs font-semibold">Idioma / Voz del Entrevistador</label>
+          <select
+            value={selectedVoice}
+            onChange={(e) => setSelectedVoice(e.target.value)}
+            disabled={callStatus === CallStatus.CONNECTING || callStatus === CallStatus.ACTIVE}
+            className="bg-dark-300 text-light-100 border border-dark-100 rounded-lg px-3 py-2 text-sm outline-none focus:border-primary-200 disabled:opacity-50 transition-all cursor-pointer"
+          >
+            {VOICE_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key} className="bg-dark-300 text-light-100">
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
-      )}
+      </div>
 
       <div className="call-view">
         <div className="card-interviewer">
           <div className="avatar">
             <Image
               src="/ai-avatar_v3.png"
-              alt="vapi"
+              alt="agent"
               width={120}
               height={120}
               className="rounded-full object-cover size-[120px]"

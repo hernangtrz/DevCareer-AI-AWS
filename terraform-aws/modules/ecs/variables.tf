@@ -105,18 +105,6 @@ variable "google_generative_ai_api_key" {
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
-# VAPI (frontend)
-# ──────────────────────────────────────────────────────────────────────────────
-variable "next_public_vapi_web_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "next_public_vapi_workflow_id" {
-  type = string
-}
-
-# ──────────────────────────────────────────────────────────────────────────────
 # TASK SIZING
 # ──────────────────────────────────────────────────────────────────────────────
 variable "frontend_cpu" { type = number }

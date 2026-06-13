@@ -5,7 +5,6 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes";
 import interviewsRoutes from "./routes/interviews.routes";
 import feedbackRoutes from "./routes/feedback.routes";
-import vapiRoutes from "./routes/vapi.routes";
 import livekitRoutes from "./routes/livekit.routes";
 import cvRoutes from "./routes/cv.routes";
 
@@ -31,7 +30,6 @@ app.get("/health", (_req, res) => {
 app.use("/auth", authRoutes);
 app.use("/interviews", interviewsRoutes);
 app.use("/feedback", feedbackRoutes);
-app.use("/api/vapi", vapiRoutes);
 app.use("/api/livekit", livekitRoutes);
 app.use("/api/cv", cvRoutes);
 

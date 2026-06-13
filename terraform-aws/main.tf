@@ -125,12 +125,10 @@ module "ecs" {
   cartesia_api_key     = var.cartesia_api_key
   groq_api_key         = var.groq_api_key
 
-  # Cognito Auth + Vapi (frontend — runtime inject)
+  # Cognito Auth (frontend — runtime inject)
   next_public_api_url          = "http://${module.alb.external_alb_dns}"
   cognito_user_pool_id         = module.cognito.user_pool_id
   cognito_client_id            = module.cognito.client_id
-  next_public_vapi_web_token   = var.next_public_vapi_web_token
-  next_public_vapi_workflow_id = var.next_public_vapi_workflow_id
 
   # Task sizing
   frontend_cpu           = var.frontend_cpu
