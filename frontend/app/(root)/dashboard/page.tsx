@@ -9,7 +9,7 @@ import InterviewCard from "@/components/InterviewCard";
 import { getCurrentUser, getSessionCookie, getLanguageCookie } from "@/lib/api.server";
 import { getInterviewsByUserId } from "@/lib/api";
 import { interviewTemplates } from "@/constants";
-import { FileText, Search, ArrowRight } from "lucide-react";
+import { FileText, Search, ArrowRight, Code2 } from "lucide-react";
 import { translations } from "@/lib/translations";
 
 const Page = async () => {
@@ -42,6 +42,15 @@ const Page = async () => {
       color: "from-fuchsia-500/20 to-fuchsia-600/5 border-fuchsia-500/20",
       iconColor: "text-fuchsia-400",
     },
+    {
+      icon: <Code2 className="h-5 w-5" />,
+      title: t.dash_code_challenge_title,
+      description: t.dash_code_challenge_desc,
+      href: "/code-challenge",
+      badge: t.dash_code_challenge_badge,
+      color: "from-cyan-500/20 to-cyan-600/5 border-cyan-500/20",
+      iconColor: "text-cyan-400",
+    },
   ];
 
   return (
@@ -69,7 +78,7 @@ const Page = async () => {
           <h2>{t.dash_other_modules}</h2>
           <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold">{t.dash_new_tools}</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {moduleCards.map((m) => (
             <Link key={m.title} href={m.href}
               className={`group flex items-start gap-4 p-6 rounded-2xl bg-gradient-to-br border transition-all hover:scale-[1.01] ${m.color}`}>

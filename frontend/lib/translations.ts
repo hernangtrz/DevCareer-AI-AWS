@@ -19,6 +19,9 @@ export const translations = {
     dash_my_interviews: "Tus entrevistas",
     dash_no_interviews: "Aún no has realizado ninguna entrevista",
     dash_templates: "Plantillas de entrevistas",
+    dash_code_challenge_title: "Prueba técnica de código",
+    dash_code_challenge_desc: "Resuelve problemas de algoritmos como en una entrevista real y obtén retroalimentación de la IA.",
+    dash_code_challenge_badge: "Beta",
     
     // Interview page & toggle
     int_title: "Genera tu entrevista",
@@ -81,6 +84,9 @@ export const translations = {
     dash_my_interviews: "Your interviews",
     dash_no_interviews: "You haven't conducted any interviews yet",
     dash_templates: "Interview templates",
+    dash_code_challenge_title: "Technical Code Challenge",
+    dash_code_challenge_desc: "Solve algorithm problems like in a real interview and get AI feedback.",
+    dash_code_challenge_badge: "Beta",
     
     // Interview page & toggle
     int_title: "Generate your interview",
