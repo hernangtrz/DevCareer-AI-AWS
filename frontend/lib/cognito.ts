@@ -1,13 +1,14 @@
 /**
  * lib/cognito.ts
  *
- * Cliente de autenticación con AWS Cognito usando las APIs REST directas.
- * No requiere dependencias externas — usa el fetch nativo del navegador.
+ * Cliente de autenticación híbrido. Soporta AWS Cognito y Supabase Auth.
  */
 
+import { supabase } from "./supabase";
+
 const REGION       = process.env.NEXT_PUBLIC_AWS_REGION       || "us-east-1";
-const USER_POOL_ID = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!;
-const CLIENT_ID    = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID!;
+const USER_POOL_ID = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || "";
+const CLIENT_ID    = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID || "";
 
 const COGNITO_URL = `https://cognito-idp.${REGION}.amazonaws.com/`;
 
@@ -37,7 +38,24 @@ export async function signUpCognito(
   email: string,
   password: string,
   name: string
-): Promise<{ userSub: string }> {
+): Promise<{ userSub: string; session?: any }> {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    });
+
+    if (error) throw new Error(error.message);
+    if (!data.user) throw new Error("Error al registrar el usuario en Supabase");
+
+    return { userSub: data.user.id, session: data.session };
+  }
+
   const data = await cognitoRequest("SignUp", {
     ClientId: CLIENT_ID,
     Username: email,
@@ -58,6 +76,17 @@ export async function confirmSignUpCognito(
   email: string,
   code: string
 ): Promise<void> {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: "signup",
+    });
+
+    if (error) throw new Error(error.message);
+    return;
+  }
+
   await cognitoRequest("ConfirmSignUp", {
     ClientId:         CLIENT_ID,
     Username:         email,
@@ -72,6 +101,22 @@ export async function signInCognito(
   email: string,
   password: string
 ): Promise<{ idToken: string; accessToken: string; refreshToken: string }> {
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) throw new Error(error.message);
+    if (!data.session) throw new Error("Error al obtener la sesión de Supabase");
+
+    return {
+      idToken:      data.session.access_token,
+      accessToken:  data.session.access_token,
+      refreshToken: data.session.refresh_token || "",
+    };
+  }
+
   const data = await cognitoRequest("InitiateAuth", {
     ClientId:  CLIENT_ID,
     AuthFlow:  "USER_PASSWORD_AUTH",
@@ -93,11 +138,15 @@ export async function signInCognito(
 // ─────────────────────────────────────────────────────────────────────────────
 // SIGN OUT — Limpiar sesión local
 // ─────────────────────────────────────────────────────────────────────────────
-export function signOutCognito(): void {
+export async function signOutCognito(): Promise<void> {
   if (typeof window !== "undefined") {
     localStorage.removeItem("cognitoIdToken");
     localStorage.removeItem("cognitoAccessToken");
     localStorage.removeItem("cognitoRefreshToken");
+  }
+
+  if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    await supabase.auth.signOut();
   }
 }
 
@@ -108,3 +157,4 @@ export function getCognitoIdToken(): string {
   if (typeof window === "undefined") return "";
   return localStorage.getItem("cognitoIdToken") ?? "";
 }
+

@@ -48,10 +48,36 @@ const AuthForm = ({ type }: { type: FormType }) => {
       if (type === "sign-up") {
         const { name, email, password } = data;
 
-        // 1. Registrar usuario en Cognito
-        const { userSub } = await signUpCognito(email, password!, name!);
+        // 1. Registrar usuario en Cognito / Supabase
+        const { userSub, session } = await signUpCognito(email, password!, name!);
 
-        // 2. Mostrar formulario de confirmación de código
+        // Si hay sesión directa (auto-confirmación activada en Supabase o desarrollo)
+        if (session) {
+          localStorage.setItem("cognitoIdToken", session.access_token);
+
+          // Registrar en la base de datos
+          await signUp({
+            uid:   userSub,
+            name:  name!,
+            email: email,
+          });
+
+          // Iniciar sesión y obtener cookie de sesión para Next.js
+          const result = await signIn({ idToken: session.access_token });
+          if (result.success && result.sessionCookie) {
+            await fetch("/api/auth/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionCookie: result.sessionCookie }),
+            });
+            toast.success("¡Cuenta creada e inicio de sesión exitoso!");
+            router.refresh();
+            router.push("/dashboard");
+            return;
+          }
+        }
+
+        // 2. Mostrar formulario de confirmación de código (si requiere verificación de email)
         setPendingEmail(email);
         setPendingName(name!);
         setPendingSub(userSub);
