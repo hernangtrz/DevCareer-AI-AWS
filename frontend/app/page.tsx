@@ -11,6 +11,7 @@ import {
   Sparkles,
   ChevronRight,
   Star,
+  Code2,
 } from "lucide-react";
 
 const features = [
@@ -43,6 +44,16 @@ const features = [
     badge: "Nuevo",
     color: "from-fuchsia-500/20 to-fuchsia-600/5 border-fuchsia-500/20",
     iconColor: "text-fuchsia-400",
+  },
+  {
+    icon: <Code2 className="h-6 w-6" />,
+    title: "Prueba de Código",
+    description:
+      "Resuelve desafíos de algoritmos en tiempo real y obtén retroalimentación y optimizaciones detalladas sobre tu código.",
+    href: "/code-challenge",
+    badge: "Beta",
+    color: "from-cyan-500/20 to-cyan-600/5 border-cyan-500/20",
+    iconColor: "text-cyan-400",
   },
 ];
 
@@ -180,7 +191,7 @@ export default async function LandingPage() {
       <section id="features" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm mb-4">
-            <Sparkles className="h-3.5 w-3.5" /> Tres módulos poderosos
+            <Sparkles className="h-3.5 w-3.5" /> Cuatro módulos poderosos
           </span>
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
             Todo lo que necesitas para{" "}
@@ -189,12 +200,12 @@ export default async function LandingPage() {
             </span>
           </h2>
           <p className="text-white/50 text-lg max-w-2xl mx-auto">
-            Desde practicar entrevistas hasta optimizar tu CV, tenemos todas las
+            Desde practicar entrevistas y resolver retos de código hasta optimizar tu CV, tenemos todas las
             herramientas que necesitas en un solo lugar.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature) => (
             <Link
               key={feature.title}
