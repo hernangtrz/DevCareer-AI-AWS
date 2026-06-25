@@ -1,37 +1,45 @@
 # DevCareer AI
 
-A full-stack platform for practicing technical job interviews with a real-time voice AI agent. The system conducts the interview, evaluates your responses, and generates a structured feedback report automatically.
+A full-stack platform that helps developers prepare for technical job interviews. It combines AI voice interviews, resume generation, resume analysis, and real-time coding practice into a single product.
 
 ---
 
 ## Overview
 
-DevCareer AI simulates the experience of a real technical interview. Instead of reading questions on a screen, you have a live voice conversation with an AI interviewer. Once the session ends, GPT-4o analyzes the transcript and produces a detailed performance report with scores, strengths, and areas to improve.
-
-The platform consists of three independent services:
-
-- **Frontend** — Next.js application with the user interface
-- **Backend** — Express REST API that handles business logic, data, and AI integrations
-- **Voice Agent** — A LiveKit-powered process that runs the interview in real time
+DevCareer AI is built around four core modules that cover different stages of technical interview preparation. The platform consists of three independent services that run together: a Next.js frontend, an Express REST API backend, and a LiveKit voice agent process.
 
 ---
 
-## Features
+## Modules
 
-**Voice interview simulation**
-Conduct interviews by speaking naturally through your microphone. The agent listens, responds, and progresses through each question just like a real interviewer. Supports English and Spanish with multiple selectable voices.
+### AI Voice Interview
 
-**Two ways to create an interview**
-- Form-based: select your role, experience level, tech stack, interview type (technical, behavioral, mixed), and number of questions.
-- Voice-based: tell the agent what you need. It collects all parameters through conversation and creates the interview automatically.
+The main module. You have a live voice conversation with an AI interviewer through your microphone, just like a real interview call. The agent listens to your answers, responds naturally, and moves through each question in sequence.
 
-**AI feedback reports**
-After each interview, the system generates a structured report including a score from 1 to 10, identified strengths, areas for improvement, and specific technical recommendations.
+Interviews can be created in two ways:
+- **Form-based**: choose your target role, experience level, tech stack, interview type (technical, behavioral, or mixed), and number of questions.
+- **Voice-based**: talk to a setup agent that collects all parameters through conversation and creates the interview automatically.
 
-**CV analyzer**
-Upload a resume as a PDF. The backend extracts the content and returns an analysis of how well it is positioned for the target role.
+Once the interview ends, GPT-4o analyzes the full transcript and generates a structured feedback report with a score from 1 to 10, identified strengths, areas for improvement, and specific technical recommendations.
 
-**Authentication**
+Supports English and Spanish. Multiple voices available: Alejandro, Catalina, Katie, Daniel.
+
+### CV Creator
+
+A guided module that helps users build a professional resume with AI assistance. It structures the content following standard formats used in tech hiring, making it easier to present experience and skills clearly to recruiters and ATS systems.
+
+### CV Analyzer
+
+Upload an existing resume as a PDF. The backend extracts the content and sends it to the AI for analysis. The system evaluates how well the resume is positioned for a target role and returns specific suggestions to improve it.
+
+### Real-time Coding Agent (beta)
+
+An interactive module where an AI agent proposes coding challenges and evaluates your solution in real time, simulating a technical coding interview. This module is currently in beta and under active development.
+
+---
+
+## Authentication
+
 Full auth flow with sign up, sign in, sign out, and protected routes. Compatible with AWS Cognito (production) and Supabase (local development).
 
 ---
@@ -317,16 +325,32 @@ The backend and voice agent can be deployed to any Node.js-compatible host.
 
 ## Roadmap
 
+**AI Voice Interview**
 - [x] Voice interview simulation (Spanish and English)
 - [x] Form-based interview creation
-- [x] Voice-based interview creation
-- [x] AI-generated feedback reports
-- [x] CV analyzer
-- [x] AWS infrastructure with Terraform
-- [x] Supabase integration for local development
-- [ ] Code challenge module
-- [ ] Interview history with filtering
+- [x] Voice-based interview creation via agent
+- [x] AI-generated feedback reports after each session
+- [ ] Interview history with filtering and search
 - [ ] Progress tracking over time
+
+**CV Creator**
+- [x] AI-assisted resume builder with standard tech formats
+- [ ] PDF export of the generated resume
+- [ ] Multiple template options
+
+**CV Analyzer**
+- [x] PDF upload and AI-powered resume analysis
+- [ ] Role-specific scoring and positioning feedback
+
+**Real-time Coding Agent** *(beta)*
+- [x] Basic coding challenge flow
+- [ ] Live code execution and evaluation
+- [ ] Multi-language support
+- [ ] Difficulty levels and topic filtering
+
+**Infrastructure**
+- [x] AWS infrastructure with Terraform (DynamoDB, Cognito)
+- [x] Supabase integration for local development
 - [ ] PDF export of feedback reports
 
 ---
