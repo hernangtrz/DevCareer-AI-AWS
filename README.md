@@ -2,6 +2,8 @@
 
 A full-stack platform that helps developers prepare for technical job interviews. It combines AI voice interviews, resume generation, resume analysis, and real-time coding practice into a single product.
 
+> **Models in use:** LLaMA 3.3 70B (Groq) powers the voice agent during interviews. Google Gemini Flash analyzes the transcript afterward and generates the feedback report.
+
 ---
 
 ## Overview
@@ -20,7 +22,7 @@ Interviews can be created in two ways:
 - **Form-based**: choose your target role, experience level, tech stack, interview type (technical, behavioral, or mixed), and number of questions.
 - **Voice-based**: talk to a setup agent that collects all parameters through conversation and creates the interview automatically.
 
-Once the interview ends, GPT-4o analyzes the full transcript and generates a structured feedback report with a score from 1 to 10, identified strengths, areas for improvement, and specific technical recommendations.
+Once the interview ends, Google Gemini analyzes the full transcript and generates a structured feedback report with a score from 0 to 100 across five categories: communication skills, technical knowledge, problem solving, cultural fit, and confidence. The report includes identified strengths, areas for improvement, and a final assessment. For English interviews, a separate English proficiency evaluation is generated in parallel with CEFR level, grammar score, and specific error examples.
 
 Supports English and Spanish. Multiple voices available: Alejandro, Catalina, Katie, Daniel.
 
@@ -84,7 +86,8 @@ Data Layer
 | Text to speech | Cartesia Sonic-2 |
 | Voice activity detection | Silero VAD |
 | Real-time audio | LiveKit Agents SDK + Client SDK |
-| AI feedback and questions | OpenAI GPT-4o |
+| AI feedback generation | Google Gemini Flash |
+| AI question generation | Google Gemini Flash |
 | Auth (production) | AWS Cognito |
 | Database (production) | AWS DynamoDB |
 | Auth (local dev) | Supabase Auth |
