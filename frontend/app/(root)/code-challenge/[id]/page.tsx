@@ -3,6 +3,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const Editor = dynamic(() => import("@monaco-editor/react"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[380px] flex items-center justify-center bg-[#141619] border-none text-white/40 font-mono text-sm">
+      Cargando editor de código...
+    </div>
+  ),
+});
+
 import {
   Code2,
   Play,
@@ -121,6 +132,23 @@ export default function ProblemPage() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [timerStarted, setTimerStarted] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const handleEditorDidMount = useCallback((editor: any, monaco: any) => {
+    monaco.editor.defineTheme("devcareer-dark", {
+      base: "vs-dark",
+      inherit: true,
+      rules: [],
+      colors: {
+        "editor.background": "#141619", // Sleek dark gray
+        "editor.lineHighlightBackground": "#1d2025",
+        "editorCursor.foreground": "#22d3ee", // Cyan cursor
+        "editorLineNumber.foreground": "#4b5563",
+        "editorLineNumber.activeForeground": "#22d3ee",
+      },
+    });
+    monaco.editor.setTheme("devcareer-dark");
+  }, []);
+
 
   useEffect(() => {
     if (problem) {
@@ -598,16 +626,33 @@ export default function ProblemPage() {
               </span>
             </div>
 
-            {/* Textarea editor */}
-            <textarea
-              id="code-editor"
-              value={code}
-              onChange={(e) => handleCodeChange(e.target.value)}
-              className="w-full bg-transparent text-emerald-200 font-mono text-sm p-5 resize-none outline-none min-h-[380px] leading-relaxed"
-              spellCheck={false}
-              placeholder="Escribe tu solución aquí..."
-              disabled={submitted}
-            />
+            {/* Monaco Editor */}
+            <div className="w-full h-[380px] bg-[#141619]">
+              <Editor
+                height="100%"
+                language="javascript"
+                value={code}
+                onChange={(val) => handleCodeChange(val ?? "")}
+                onMount={handleEditorDidMount}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: "var(--font-mono), Menlo, Monaco, 'Courier New', monospace",
+                  lineNumbers: "on",
+                  tabSize: 2,
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  readOnly: submitted,
+                  domReadOnly: submitted,
+                  padding: { top: 12, bottom: 12 },
+                  cursorBlinking: "smooth",
+                  cursorSmoothCaretAnimation: "on",
+                  smoothScrolling: true,
+                  contextmenu: false,
+                }}
+              />
+            </div>
+
 
             {/* Action bar */}
             <div className="flex items-center gap-3 px-5 py-4 border-t border-white/10">
