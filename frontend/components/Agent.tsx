@@ -395,7 +395,7 @@ const Agent = ({
         </div>
 
         {/* 3. Subtitle / Transcript bar */}
-        <div className="relative w-full min-h-[72px] bg-zinc-950/40 border border-zinc-900/60 rounded-xl p-4 flex items-center justify-center text-center z-10 max-h-24 overflow-y-auto mb-6">
+        <div className="relative w-full min-h-[72px] bg-zinc-950/40 border border-zinc-900/60 rounded-xl p-4 flex items-center justify-center text-center z-10 max-h-24 overflow-y-auto no-scrollbar mb-6">
           {latestMessage ? (
             <p
               key={latestMessage}
@@ -469,6 +469,13 @@ const Agent = ({
         .animate-vocalBar1 { animation: vocalBarAnim1 1s ease-in-out infinite; }
         .animate-vocalBar2 { animation: vocalBarAnim2 0.8s ease-in-out infinite; }
         .animate-vocalBar3 { animation: vocalBarAnim3 1.2s ease-in-out infinite; }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
     </div>
   );

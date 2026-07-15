@@ -108,11 +108,11 @@ export default function CodeChallengePage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/60 outline-none focus:border-white/20 transition-colors"
+          className="bg-white/[0.03] border border-white/10 rounded-xl px-3 py-2 text-xs text-white/60 outline-none focus:border-white/20 transition-colors cursor-pointer"
         >
-          <option value="all">Todas las categorías</option>
+          <option value="all" className="bg-[#141619] text-white">Todas las categorías</option>
           {ALL_CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
+            <option key={cat} value={cat} className="bg-[#141619] text-white">
               {cat}
             </option>
           ))}
