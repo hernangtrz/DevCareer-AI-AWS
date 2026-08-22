@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import Agent from "@/components/Agent";
 import InterviewForm from "@/components/InterviewForm";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Sparkles, Mic } from "lucide-react";
 
 interface InterviewPageProps {
   userName: string;
@@ -11,51 +10,26 @@ interface InterviewPageProps {
 }
 
 const InterviewPage = ({ userName, userId }: InterviewPageProps) => {
-  const [mode, setMode] = useState<"form" | "agent">("form");
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-2xl mx-auto">
-      <div className="flex flex-col items-center gap-2 text-center">
-        <h3>{t("int_title")}</h3>
-        <p className="text-light-400 text-sm">
-          {mode === "form"
-            ? t("int_form_mode_desc")
-            : t("int_agent_mode_desc")}
+    <div className="flex flex-col items-center gap-8 w-full max-w-2xl mx-auto pb-12">
+      <div className="flex flex-col items-center gap-3 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>{t("int_title") || "Simulador de Entrevista de Voz"}</span>
+        </div>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+          {t("int_form_mode_desc") || "Configura tu entrevista personalizada"}
+        </h1>
+        <p className="text-zinc-400 text-sm max-w-lg leading-relaxed">
+          Selecciona tu rol objetivo, tecnologías y nivel de experiencia. Nuestro agente de voz de IA te entrevistará en tiempo real.
         </p>
       </div>
 
-      {/* Toggle */}
-      <div className="flex bg-dark-200 rounded-full p-1 border border-input">
-        <button
-          onClick={() => setMode("form")}
-          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-            mode === "form"
-              ? "bg-primary-200 text-dark-100"
-              : "text-light-400 hover:text-light-100"
-          }`}
-        >
-          {t("int_mode_form")}
-        </button>
-        <button
-          onClick={() => setMode("agent")}
-          className={`px-6 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
-            mode === "agent"
-              ? "bg-primary-200 text-dark-100"
-              : "text-light-400 hover:text-light-100"
-          }`}
-        >
-          {t("int_mode_agent")}
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="w-full">
-        {mode === "form" ? (
-          <InterviewForm userId={userId} />
-        ) : (
-          <Agent userName={userName} userId={userId} type="generate" />
-        )}
+      {/* Form Content */}
+      <div className="w-full bg-zinc-900/40 border border-zinc-800/80 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-sm">
+        <InterviewForm userId={userId} />
       </div>
     </div>
   );

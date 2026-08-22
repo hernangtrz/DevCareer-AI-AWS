@@ -2,7 +2,7 @@
 
 A full-stack platform that helps developers prepare for technical job interviews. It combines AI voice interviews, resume generation, resume analysis, and real-time coding practice into a single product.
 
-> **Models in use:** LLaMA 3.3 70B (Groq) powers the voice agent during interviews. Google Gemini Flash analyzes the transcript afterward and generates the feedback report.
+> **Models in use:** LLaMA 3.3 70B (Groq) powers the voice agent during interviews. Google Gemini Flash analyzes the transcript afterward, generates interview questions, powers CV optimization/analysis, and evaluates real-time coding challenges.
 
 ---
 
@@ -22,27 +22,29 @@ Interviews can be created in two ways:
 - **Form-based**: choose your target role, experience level, tech stack, interview type (technical, behavioral, or mixed), and number of questions.
 - **Voice-based**: talk to a setup agent that collects all parameters through conversation and creates the interview automatically.
 
-Once the interview ends, Google Gemini analyzes the full transcript and generates a structured feedback report with a score from 0 to 100 across five categories: communication skills, technical knowledge, problem solving, cultural fit, and confidence. The report includes identified strengths, areas for improvement, and a final assessment. For English interviews, a separate English proficiency evaluation is generated in parallel with CEFR level, grammar score, and specific error examples.
+Once the interview ends, Google Gemini analyzes the full transcript and generates a structured feedback report with a score from 0 to 100 across five categories: communication skills, technical knowledge, problem solving, cultural fit, and confidence. The report includes identified strengths, areas for improvement, and a final assessment. For English interviews, a separate English proficiency evaluation is generated in parallel with CEFR level, grammar score, vocabulary suggestions, and specific error examples.
 
 Supports English and Spanish. Multiple voices available: Alejandro, Catalina, Katie, Daniel.
 
 ### CV Creator
 
-A guided module that helps users build a professional resume with AI assistance. It structures the content following standard formats used in tech hiring, making it easier to present experience and skills clearly to recruiters and ATS systems.
+A guided module that helps users build a professional resume with AI assistance. It structures the content following standard formats used in tech hiring, translating and refining experience bullets and executive summaries using Gemini AI to pass ATS filters.
 
 ### CV Analyzer
 
-Upload an existing resume as a PDF. The backend extracts the content and sends it to the AI for analysis. The system evaluates how well the resume is positioned for a target role and returns specific suggestions to improve it.
+Upload an existing resume as a PDF or paste text along with a job description. The system uses Gemini multimodal analysis to extract the content, compare it against the job opening, calculate an ATS compatibility score (keywords, formatting, grammar, impact), and provide actionable suggestions.
 
 ### Real-time Coding Agent (beta)
 
-An interactive module where an AI agent proposes coding challenges and evaluates your solution in real time, simulating a technical coding interview. This module is currently in beta and under active development.
+An interactive module where users solve coding challenges in a Monaco Editor. Solutions are verified against test cases and analyzed by Gemini AI to grade code correctness, assess Big-O time and space complexity, and provide senior interviewer tips.
 
 ---
 
 ## Authentication
 
-Full auth flow with sign up, sign in, sign out, and protected routes. Compatible with AWS Cognito (production) and Supabase (local development).
+Full auth flow with sign up, sign in, sign out, and protected routes. Compatible with:
+- **Production:** AWS Cognito (User Pools + JWT verification)
+- **Local development:** Supabase (PostgreSQL + Auth)
 
 ---
 
@@ -52,14 +54,14 @@ Full auth flow with sign up, sign in, sign out, and protected routes. Compatible
 Browser
   |
   v
-Frontend (Next.js) — Vercel
+Frontend (Next.js) — Vercel / ECS
   |                          \
   v                           v
 Backend (Express API)     LiveKit Cloud (WebRTC)
   |                           |
   |                           v
   |                       Voice Agent
-  |                         Deepgram  (speech to text)
+  |                         Deepgram  (speech to text: Nova-2)
   |                         Groq LLaMA 3.3 70B  (language model)
   |                         Cartesia Sonic-2  (text to speech)
   |                         Silero VAD  (voice activity detection)
@@ -68,6 +70,7 @@ Backend (Express API)     LiveKit Cloud (WebRTC)
 Data Layer
   Production:   AWS DynamoDB + AWS Cognito
   Local dev:    Supabase (PostgreSQL + Auth)
+  AI Provider:  Google Gemini Flash (Feedback, Questions, CV, Coding)
 ```
 
 ---
@@ -78,22 +81,21 @@ Data Layer
 |---|---|
 | Frontend framework | Next.js 16, React 19, TypeScript |
 | Styling | Tailwind CSS v4, Framer Motion |
-| UI components | shadcn/ui, Radix UI |
+| UI components | shadcn/ui, Radix UI, Monaco Editor |
 | Forms and validation | React Hook Form, Zod |
 | Backend | Express.js, TypeScript |
 | Speech to text | Deepgram Nova-2 |
-| Language model (agent) | Groq — LLaMA 3.3 70B |
+| Language model (Voice Agent) | Groq — LLaMA 3.3 70B |
 | Text to speech | Cartesia Sonic-2 |
 | Voice activity detection | Silero VAD |
 | Real-time audio | LiveKit Agents SDK + Client SDK |
-| AI feedback generation | Google Gemini Flash |
-| AI question generation | Google Gemini Flash |
+| AI analysis & generation | Google Gemini Flash (`gemini-3.1-flash-lite`) |
 | Auth (production) | AWS Cognito |
 | Database (production) | AWS DynamoDB |
 | Auth (local dev) | Supabase Auth |
 | Database (local dev) | Supabase PostgreSQL |
 | Infrastructure | Terraform |
-| Deployment | Vercel (frontend), AWS (backend) |
+| Deployment | Vercel / AWS ECS Fargate |
 
 ---
 
@@ -110,6 +112,7 @@ DevCareer AI/
 │   │   │   ├── cv-analyzer/    # Resume analysis
 │   │   │   ├── cv-creator/     # Resume builder
 │   │   │   └── code-challenge/ # Coding challenges
+│   │   ├── api/                # Next.js Server Routes (CV analyzer & code feedback)
 │   │   └── page.tsx            # Landing page
 │   ├── components/             # Shared UI components
 │   ├── contexts/               # React context providers
@@ -119,16 +122,16 @@ DevCareer AI/
 ├── Backend/
 │   └── src/
 │       ├── config/             # Supabase, DynamoDB, Cognito initialization
-│       ├── middleware/         # Auth middleware
-│       ├── routes/             # API route handlers
+│       ├── middleware/         # Auth middleware (Cognito / Supabase)
+│       ├── routes/             # API route handlers (auth, interviews, feedback, livekit, cv)
 │       ├── services/           # Business logic per domain
 │       └── types/
 │
 ├── livekit-agent/
-│   └── agent.ts                # Voice agent with tool calling
+│   └── agent.ts                # Voice agent with tool calling and LiveKit Agents SDK
 │
-├── terraform-aws/              # Infrastructure as Code for AWS
-└── scripts/                    # Helper scripts
+├── terraform-aws/              # Infrastructure as Code for AWS (ECS, ALB, DynamoDB, Cognito)
+└── scripts/                    # Automation and cleanup scripts
 ```
 
 ---
@@ -146,12 +149,12 @@ The full application runs with three services in separate terminals.
 
 | Service | Purpose | Free tier |
 |---|---|---|
-| LiveKit Cloud | WebRTC signaling | Yes |
-| Deepgram | Speech to text | Yes |
-| Groq | LLaMA 3.3 inference | Yes |
-| Cartesia | Text to speech | Yes |
-| OpenAI | GPT-4o for feedback and question generation | No |
-| Supabase | Auth and database for local development | Yes |
+| LiveKit Cloud | WebRTC audio signaling | Yes |
+| Deepgram | Speech to text (Nova-2) | Yes |
+| Groq | LLaMA 3.3 70B inference for voice agent | Yes |
+| Cartesia | Text to speech (Sonic-2) | Yes |
+| Google Gemini AI | Feedback, questions, CV, and coding evaluations | Yes |
+| Supabase | Auth and PostgreSQL database for local development | Yes |
 
 ### Setup
 
@@ -164,7 +167,7 @@ cd DevCareer-AI-AWS
 
 **2. Create the Supabase tables**
 
-In the Supabase SQL editor, run:
+In your Supabase SQL editor, run:
 
 ```sql
 create table users (
@@ -179,11 +182,12 @@ create table interviews (
   user_id text references users(id),
   role text,
   level text,
-  techstack text,
+  techstack jsonb,
   type text,
   questions jsonb,
-  created_at timestamptz default now(),
-  finished_at timestamptz
+  finalized boolean default false,
+  cover_image text,
+  created_at timestamptz default now()
 );
 
 create table feedback (
@@ -191,10 +195,11 @@ create table feedback (
   interview_id text references interviews(id),
   user_id text references users(id),
   total_score numeric,
-  scores jsonb,
+  category_scores jsonb,
   strengths jsonb,
   areas_for_improvement jsonb,
   final_assessment text,
+  english_feedback jsonb,
   created_at timestamptz default now()
 );
 ```
@@ -202,55 +207,62 @@ create table feedback (
 **3. Configure environment variables**
 
 Backend (`Backend/.env`):
-```
+```env
 PORT=3001
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-LIVEKIT_API_KEY=
-LIVEKIT_API_SECRET=
-LIVEKIT_URL=
-OPENAI_API_KEY=
+FRONTEND_URL=http://localhost:3000
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+LIVEKIT_API_KEY=your-livekit-api-key
+LIVEKIT_API_SECRET=your-livekit-api-secret
+LIVEKIT_URL=https://your-project.livekit.cloud
+GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-api-key
+
+# Optional (Production AWS Mode):
+# AWS_REGION=us-east-1
+# COGNITO_USER_POOL_ID=
+# COGNITO_CLIENT_ID=
 ```
 
 Frontend (`frontend/.env`):
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
-NEXT_PUBLIC_LIVEKIT_URL=
+NEXT_PUBLIC_LIVEKIT_URL=https://your-project.livekit.cloud
+GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-api-key
 ```
 
 Voice Agent (`livekit-agent/.env`):
-```
-LIVEKIT_URL=
-LIVEKIT_API_KEY=
-LIVEKIT_API_SECRET=
-DEEPGRAM_API_KEY=
-GROQ_API_KEY=
-CARTESIA_API_KEY=
+```env
+LIVEKIT_URL=https://your-project.livekit.cloud
+LIVEKIT_API_KEY=your-livekit-api-key
+LIVEKIT_API_SECRET=your-livekit-api-secret
+DEEPGRAM_API_KEY=your-deepgram-api-key
+GROQ_API_KEY=your-groq-api-key
+CARTESIA_API_KEY=your-cartesia-api-key
 BACKEND_URL=http://localhost:3001
 ```
 
 **4. Start the services**
 
 ```bash
-# Terminal 1
+# Terminal 1 - Backend API
 cd Backend && npm install && npm run dev
 
-# Terminal 2
+# Terminal 2 - Frontend App
 cd frontend && npm install && npm run dev
 
-# Terminal 3
+# Terminal 3 - LiveKit Voice Agent
 cd livekit-agent && npm install && npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000 in your browser.
 
 ---
 
 ## Production Deployment
 
-The AWS infrastructure (DynamoDB tables, Cognito User Pool, IAM roles) is defined with Terraform:
+The AWS infrastructure (VPC, ECS Fargate, ALB, DynamoDB tables, Cognito User Pool, IAM roles) is defined with Terraform:
 
 ```bash
 cd terraform-aws
@@ -258,14 +270,7 @@ terraform init
 terraform apply
 ```
 
-Deploy the frontend to Vercel:
-
-```bash
-cd frontend
-vercel --prod
-```
-
-The backend and voice agent can be deployed to any Node.js-compatible host.
+Alternatively, automated deployment pipelines are available via GitHub Actions (see [REDEPLOY.md](REDEPLOY.md) for continuous deployment instructions).
 
 ---
 
@@ -273,56 +278,70 @@ The backend and voice agent can be deployed to any Node.js-compatible host.
 
 1. The user starts an interview from the dashboard.
 2. The frontend requests a LiveKit room token from the backend.
-3. The backend generates the token and dispatches the room to LiveKit.
-4. LiveKit assigns the voice agent to the room.
-5. The agent fetches the interview questions from the backend.
-6. The agent greets the user and begins the interview.
-7. During the session: user speech is transcribed by Deepgram, processed by Groq LLaMA, and the response is synthesized by Cartesia.
-8. Silero VAD handles turn detection to avoid interruptions.
-9. Once all questions are asked, the agent ends the call.
-10. The backend sends the full transcript to GPT-4o.
-11. The feedback report is saved and displayed in the dashboard.
+3. The backend generates the token with appropriate room permissions.
+4. LiveKit connects the frontend client and dispatches the voice agent to the room.
+5. The agent fetches the interview details and questions from the backend.
+6. The agent greets the user and begins the interview session.
+7. During the session: user speech is transcribed by Deepgram Nova-2, processed by Groq LLaMA 3.3 70B, and responses are synthesized with low latency by Cartesia Sonic-2.
+8. Silero VAD handles turn detection and interruption handling.
+9. Once all questions are completed, the agent cordially ends the call.
+10. The backend sends the full transcript to Google Gemini Flash to evaluate performance and CEFR English proficiency in parallel.
+11. The generated feedback report is saved and displayed immediately in the user's dashboard.
 
 ---
 
 ## API Reference
 
-**Auth**
+### Backend API (Express)
+
+**Authentication** (`/auth`)
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/auth/signup` | Register a new user |
-| POST | `/api/auth/signin` | Sign in |
-| GET | `/api/auth/me` | Get the current user |
+| POST | `/auth/signup` | Register user record in database after verification |
+| POST | `/auth/signin` | Validate token (Cognito / Supabase) and return session |
+| GET | `/auth/me` | Get currently authenticated user |
+| POST | `/auth/verify-session` | Verify existing session cookie |
 
-**Interviews**
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/interviews` | Create an interview |
-| GET | `/api/interviews/:userId` | List interviews for a user |
-| GET | `/api/interviews/:id/details` | Get interview details |
-
-**Feedback**
+**Interviews** (`/interviews`)
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/feedback` | Save feedback |
-| GET | `/api/feedback/:interviewId` | Get feedback for an interview |
+| GET | `/interviews/mine` | List all interviews for the authenticated user |
+| GET | `/interviews/latest?limit=20` | List recent finalized interviews |
+| GET | `/interviews/:id` | Get interview details by ID |
+| POST | `/interviews/from-template` | Create an interview from a predefined template |
 
-**LiveKit (called by agent)**
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/livekit/token` | Generate a room token |
-| POST | `/api/livekit/generate` | Create an interview via voice agent |
-| GET | `/api/livekit/interview-details` | Fetch questions for the agent |
-
-**CV**
+**Feedback** (`/feedback`)
 
 | Method | Path | Description |
 |---|---|---|
-| POST | `/api/cv/analyze` | Analyze a resume PDF |
+| POST | `/feedback` | Generate Gemini feedback from transcript and store report |
+| GET | `/feedback/:interviewId` | Get feedback report for a specific interview |
+
+**LiveKit Webhooks & Voice Agent** (`/api/livekit`)
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/livekit/token` | Generate a WebRTC room access token |
+| GET | `/api/livekit/interview-details` | Fetch interview questions for the voice agent |
+| POST | `/api/livekit/generate` | Generate interview questions asynchronously via voice agent |
+
+**CV Optimization** (`/api/cv`)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/cv/improve` | Optimize resume bullets and skills for ATS with Gemini |
+| POST | `/api/cv/improve-profile` | Refine professional profile summary with Gemini |
+
+---
+
+### Frontend Server Routes (Next.js)
+
+| Method | Path | Description |
+|---|---|---|
+| POST | `/api/cv/analyze` | Multimodal ATS CV analysis (PDF / Text) via Gemini |
+| POST | `/api/code/feedback` | Evaluate coding challenge solution and Big-O complexity via Gemini |
 
 ---
 
@@ -331,30 +350,27 @@ The backend and voice agent can be deployed to any Node.js-compatible host.
 **AI Voice Interview**
 - [x] Voice interview simulation (Spanish and English)
 - [x] Form-based interview creation
-- [x] Voice-based interview creation via agent
-- [x] AI-generated feedback reports after each session
-- [ ] Interview history with filtering and search
+- [x] Voice-based interview creation via setup agent
+- [x] AI-generated feedback reports with CEFR English proficiency
+- [ ] Interview history with advanced filtering and search
 - [ ] Progress tracking over time
 
-**CV Creator**
+**CV Creator & Analyzer**
 - [x] AI-assisted resume builder with standard tech formats
-- [ ] PDF export of the generated resume
+- [x] Multimodal PDF upload and ATS compatibility analysis
+- [ ] PDF export of generated resumes
 - [ ] Multiple template options
 
-**CV Analyzer**
-- [x] PDF upload and AI-powered resume analysis
-- [ ] Role-specific scoring and positioning feedback
-
 **Real-time Coding Agent** *(beta)*
-- [x] Basic coding challenge flow
-- [ ] Live code execution and evaluation
-- [ ] Multi-language support
-- [ ] Difficulty levels and topic filtering
+- [x] Interactive Monaco Editor challenge interface
+- [x] Test case execution & Gemini solution evaluation (Big-O, score, tips)
+- [ ] Multi-language execution runtime
+- [ ] Topic and difficulty filtering
 
-**Infrastructure**
-- [x] AWS infrastructure with Terraform (DynamoDB, Cognito)
+**Infrastructure & DevOps**
+- [x] AWS infrastructure with Terraform (ECS, ALB, DynamoDB, Cognito)
 - [x] Supabase integration for local development
-- [ ] PDF export of feedback reports
+- [x] CI/CD pipelines via GitHub Actions
 
 ---
 

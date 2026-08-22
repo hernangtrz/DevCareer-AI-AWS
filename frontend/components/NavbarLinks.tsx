@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Mic, FileText, Search } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Mic, FileText, Code2, Cpu, Briefcase } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserMenu from "@/components/UserMenu";
 
@@ -12,30 +13,70 @@ interface NavbarLinksProps {
 
 const NavbarLinks = ({ userName, userEmail }: NavbarLinksProps) => {
   const { t } = useLanguage();
+  const pathname = usePathname();
 
   const navLinks = [
-    { href: "/dashboard", label: t("nav_interviews"), icon: <Mic className="h-4 w-4" />, badge: null },
-    { href: "/cv-creator", label: t("nav_create_cv"), icon: <FileText className="h-4 w-4" />, badge: t("nav_new") },
-    { href: "/cv-analyzer", label: t("nav_analyze_cv"), icon: <Search className="h-4 w-4" />, badge: t("nav_new") },
+    {
+      href: "/dashboard",
+      label: t("nav_interviews") || "Entrevistas",
+      icon: <Mic className="h-4 w-4" />,
+      active: pathname === "/dashboard" || pathname.startsWith("/interview"),
+      badge: null,
+    },
+    {
+      href: "/cv",
+      label: t("nav_cv_hub") || "CV & ATS",
+      icon: <FileText className="h-4 w-4" />,
+      active: pathname.startsWith("/cv"),
+      badge: null,
+    },
+    {
+      href: "/code-challenge",
+      label: t("nav_code_arena") || "Retos & Patrones",
+      icon: <Code2 className="h-4 w-4" />,
+      active: pathname.startsWith("/code-challenge"),
+      badge: "Arena",
+    },
+    {
+      href: "/system-design",
+      label: t("nav_system_design") || "System Design",
+      icon: <Cpu className="h-4 w-4" />,
+      active: pathname.startsWith("/system-design"),
+      badge: "Nuevo",
+    },
+    {
+      href: "/jobs",
+      label: t("nav_jobs") || "Empleos",
+      icon: <Briefcase className="h-4 w-4" />,
+      active: pathname.startsWith("/jobs"),
+      badge: "Match",
+    },
   ];
 
   return (
     <div className="flex items-center gap-1">
-      {navLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="relative flex items-center gap-2 px-4 py-2 rounded-full text-sm text-light-400 hover:text-primary-100 hover:bg-dark-200 transition-all font-medium"
-        >
-          {link.icon}
-          <span className="max-sm:hidden">{link.label}</span>
-          {link.badge && (
-            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full bg-indigo-500/80 text-white text-[9px] font-bold leading-none">
-              {link.badge}
-            </span>
-          )}
-        </Link>
-      ))}
+      <nav className="flex items-center gap-1 max-lg:hidden">
+        {navLinks.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+              link.active
+                ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30"
+                : "text-zinc-400 hover:text-white hover:bg-zinc-800/60"
+            }`}
+          >
+            {link.icon}
+            <span>{link.label}</span>
+            {link.badge && (
+              <span className="px-1.5 py-0.5 rounded-full bg-indigo-500/30 border border-indigo-400/30 text-indigo-200 text-[9px] font-bold leading-none">
+                {link.badge}
+              </span>
+            )}
+          </Link>
+        ))}
+      </nav>
+
       <div className="ml-2">
         <UserMenu name={userName} email={userEmail} />
       </div>

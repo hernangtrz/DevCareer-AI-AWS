@@ -1,9 +1,7 @@
-import Link from "next/link";
-import Image from "next/image";
 import { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { isAuthenticated, getCurrentUser } from "@/lib/api.server";
-import NavbarLinks from "@/components/NavbarLinks";
+import AppSidebar from "@/components/AppSidebar";
 
 const Layout = async ({ children }: { children: ReactNode }) => {
   let user = null;
@@ -12,20 +10,20 @@ const Layout = async ({ children }: { children: ReactNode }) => {
     if (!isUserAuthenticated) redirect("/sign-in");
     user = await getCurrentUser();
   } catch {
-    // Si el backend no responde, redirigir al login por seguridad
     redirect("/sign-in");
   }
 
   return (
-    <div className="root-layout">
-      <nav className="flex items-center justify-between no-print">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <Image src="/logo.svg" alt="Logo de DevCareer AI" width={38} height={38} />
-          <h2 className="text-primary-100 text-xl font-bold">DevCareer AI</h2>
-        </Link>
-        <NavbarLinks userName={user?.name ?? "Usuario"} userEmail={user?.email} />
-      </nav>
-      {children}
+    <div className="flex min-h-screen bg-[#020408] text-white">
+      {/* ── Left Modern Sidebar ── */}
+      <AppSidebar userName={user?.name ?? "Usuario"} userEmail={user?.email} />
+
+      {/* ── Main Content Area ── */}
+      <div className="flex flex-col flex-1 min-w-0 md:pl-64">
+        <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-8 md:px-10 py-6 md:py-10 max-md:pt-20">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

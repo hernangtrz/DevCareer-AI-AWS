@@ -18,6 +18,8 @@ export interface Problem {
   description: string;
   examples: { input: string; output: string; explanation: string }[];
   starterCode: string;
+  legacySpaghettiCode?: string; // Código legacy con malos olores para comparar
+  patternObjective?: string; // Patrón objetivo para refactorizar
   functionName: string; // nombre de la función a evaluar
   testCases: TestCase[];
   hints: string[];
@@ -408,6 +410,188 @@ Retorna la ganancia máxima que puedes obtener de esta transacción. Si no puede
     hints: [
       "Mantén el precio mínimo visto hasta ahora y calcula la ganancia actual en cada paso.",
       "La ganancia máxima es el máximo de (precio actual - precio mínimo histórico).",
+    ],
+  },
+
+  // ──────────────────────────────────────────
+  // 9. Strategy Pattern: Pasarela de Pagos
+  // ──────────────────────────────────────────
+  {
+    id: "strategy-payment-processor",
+    title: "Refactor con Strategy Pattern: Procesador de Pagos",
+    difficulty: "medium",
+    category: ["Patrones de Diseño", "Refactoring", "SOLID"],
+    patternObjective: "Strategy Pattern (GoF Comportamental)",
+    timeLimit: 20,
+    description: `Refactoriza un procesador de pagos acoplado aplicando el **Patrón Strategy**.
+Debes crear una función \`processPayment(strategyName, amount)\` que use estrategias intercambiables para calcular la comisión final y procesar el cobro:
+- **"credit_card"**: Aplica un fee del 3% sobre el monto (\`amount * 1.03\`).
+- **"paypal"**: Aplica un fee fijo de $2 más 2% (\`amount * 1.02 + 2\`).
+- **"crypto"**: Aplica un fee fijo de $0.50 (\`amount + 0.5\`).
+
+Si la estrategia no existe, retorna \`null\`. Redondea el resultado a 2 decimales.`,
+    legacySpaghettiCode: `// ❌ Código Legacy con Malos Olores (Switch Case monolítico y violación de Open/Closed Principle)
+function processPaymentBad(type, amount) {
+  if (type === "credit_card") {
+    // Cálculo hardcodeado acoplado
+    return Number((amount * 1.03).toFixed(2));
+  } else if (type === "paypal") {
+    return Number((amount * 1.02 + 2).toFixed(2));
+  } else if (type === "crypto") {
+    return Number((amount + 0.5).toFixed(2));
+  } else {
+    // Si queremos agregar ApplePay o Stripe, debemos modificar este código rompiendo OCP
+    return null;
+  }
+}`,
+    examples: [
+      {
+        input: 'strategyName = "credit_card", amount = 100',
+        output: "103.00",
+        explanation: "100 * 1.03 = 103",
+      },
+      {
+        input: 'strategyName = "paypal", amount = 100',
+        output: "104.00",
+        explanation: "100 * 1.02 + 2 = 104",
+      },
+    ],
+    starterCode: `// Implementa el Patrón Strategy con estrategias desacopladas
+const paymentStrategies = {
+  credit_card: (amount) => Number((amount * 1.03).toFixed(2)),
+  paypal: (amount) => Number((amount * 1.02 + 2).toFixed(2)),
+  crypto: (amount) => Number((amount + 0.5).toFixed(2)),
+};
+
+function processPayment(strategyName, amount) {
+  const strategy = paymentStrategies[strategyName];
+  if (!strategy) return null;
+  return strategy(amount);
+}`,
+    functionName: "processPayment",
+    testCases: [
+      { input: ["credit_card", 100], expected: 103 },
+      { input: ["paypal", 100], expected: 104 },
+      { input: ["crypto", 50], expected: 50.5 },
+      { input: ["bitcoin", 100], expected: null },
+    ],
+    hints: [
+      "El patrón Strategy encapsula algoritmos en objetos intercambiables para eliminar bloques switch o if-else anidados.",
+      "Puedes usar un mapa o diccionario de estrategias desacopladas.",
+    ],
+  },
+
+  // ──────────────────────────────────────────
+  // 10. Factory Pattern: Notification Creator
+  // ──────────────────────────────────────────
+  {
+    id: "factory-notification-dispatcher",
+    title: "Factory Method: Despachador de Notificaciones",
+    difficulty: "easy",
+    category: ["Patrones de Diseño", "Creacionales"],
+    patternObjective: "Factory Method Pattern (GoF Creacional)",
+    timeLimit: 15,
+    description: `Implementa una función fábrica \`createNotification(channel, recipient, message)\` basada en el **Patrón Factory Method**.
+Debe retornar un objeto con el formato estandarizado según el canal:
+- Si \`channel === "email"\`: \`{ channel: "email", to: recipient, content: message, status: "queued", protocol: "SMTP" }\`
+- Si \`channel === "sms"\`: \`{ channel: "sms", to: recipient, content: message, status: "queued", protocol: "SMPP" }\`
+- Si \`channel === "push"\`: \`{ channel: "push", to: recipient, content: message, status: "queued", protocol: "FCM" }\`
+- Si el canal no es soportado, retorna \`null\`.`,
+    legacySpaghettiCode: `// ❌ Código Legacy sin Factory (Instanciación directa y dispersa en el cliente)
+function sendAlert(user, text, mode) {
+  if (mode === "email") {
+    const emailObj = { channel: "email", to: user, content: text, status: "queued", protocol: "SMTP" };
+    // Lógica mezclada con creación
+  }
+}`,
+    examples: [
+      {
+        input: 'channel = "email", recipient = "user@test.com", message = "Hola"',
+        output: '{ channel: "email", to: "user@test.com", content: "Hola", status: "queued", protocol: "SMTP" }',
+        explanation: "La fábrica crea la instancia correcta de Email Notification.",
+      },
+    ],
+    starterCode: `function createNotification(channel, recipient, message) {
+  // Implementa el Factory Method aquí
+  
+}`,
+    functionName: "createNotification",
+    testCases: [
+      {
+        input: ["email", "dev@test.com", "Bienvenido"],
+        expected: { channel: "email", to: "dev@test.com", content: "Bienvenido", status: "queued", protocol: "SMTP" },
+      },
+      {
+        input: ["sms", "+123456789", "Tu código es 4040"],
+        expected: { channel: "sms", to: "+123456789", content: "Tu código es 4040", status: "queued", protocol: "SMPP" },
+      },
+      {
+        input: ["carrier_pigeon", "Bob", "Hello"],
+        expected: null,
+      },
+    ],
+    hints: [
+      "El patrón Factory desacopla la creación del objeto de su uso directo.",
+      "Valida el canal solicitado y retorna la estructura correspondiente con su protocolo.",
+    ],
+  },
+
+  // ──────────────────────────────────────────
+  // 11. Adapter Pattern: Normalizador de Datos
+  // ──────────────────────────────────────────
+  {
+    id: "adapter-data-normalizer",
+    title: "Patrón Adapter: Adaptador de APIs de Empleo",
+    difficulty: "medium",
+    category: ["Patrones de Diseño", "Estructurales", "Refactoring"],
+    patternObjective: "Adapter Pattern (GoF Estructural)",
+    timeLimit: 20,
+    description: `Crea una función adaptadora \`adaptJobOffer(rawJob, source)\` que transforme ofertas con estructuras dispares de diferentes portales a un modelo estándar:
+\`{ id: string, title: string, company: string, location: string, remote: boolean, minSalary: number }\`
+
+Fuentes soportadas:
+1. **"linkedin"**: Recibe \`{ job_id, role_name, company_name, job_location, is_remote, pay_min }\`
+2. **"indeed"**: Recibe \`{ id, title, employer, city, remote_work, salary_from }\`
+
+Si la fuente no es reconocida, retorna \`null\`. Asegura que \`remote\` sea booleano y \`minSalary\` numérico (o \`0\` si falta).`,
+    legacySpaghettiCode: `// ❌ Código Legacy con Incompatibilidad de Interfaces
+// LinkedIn envía: role_name, job_location, pay_min
+// Indeed envía: title, city, salary_from
+// El cliente frontend explota si no recibe una interfaz unificada.`,
+    examples: [
+      {
+        input: 'rawJob = { job_id: "101", role_name: "Frontend Dev", company_name: "Acme", job_location: "Remoto", is_remote: true, pay_min: 5000 }, source = "linkedin"',
+        output: '{ id: "101", title: "Frontend Dev", company: "Acme", location: "Remoto", remote: true, minSalary: 5000 }',
+        explanation: "El adaptador normaliza la nomenclatura de LinkedIn al formato estándar del sistema.",
+      },
+    ],
+    starterCode: `function adaptJobOffer(rawJob, source) {
+  // Implementa el Patrón Adapter aquí
+  
+}`,
+    functionName: "adaptJobOffer",
+    testCases: [
+      {
+        input: [
+          { job_id: "lk-1", role_name: "React Developer", company_name: "Google", job_location: "Remote", is_remote: true, pay_min: 8000 },
+          "linkedin",
+        ],
+        expected: { id: "lk-1", title: "React Developer", company: "Google", location: "Remote", remote: true, minSalary: 8000 },
+      },
+      {
+        input: [
+          { id: "ind-99", title: "Backend Engineer", employer: "Amazon", city: "Seattle", remote_work: false, salary_from: 10000 },
+          "indeed",
+        ],
+        expected: { id: "ind-99", title: "Backend Engineer", company: "Amazon", location: "Seattle", remote: false, minSalary: 10000 },
+      },
+      {
+        input: [{ id: "unk-1" }, "unknown_portal"],
+        expected: null,
+      },
+    ],
+    hints: [
+      "El patrón Adapter convierte la interfaz de una clase o formato de datos en otra interfaz que el cliente espera.",
     ],
   },
 ];
