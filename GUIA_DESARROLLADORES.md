@@ -176,9 +176,9 @@ Estos son los 3 módulos que vamos a desarrollar a continuación. Las rutas base
 
 ---
 
-## ⚡ 6. Puesta en Marcha Local (Local Setup en 4 Pasos)
+## ⚡ 6. Puesta en Marcha Local (Local Setup en 3 Pasos)
 
-Para que tus compañeros puedan levantar todo el entorno en sus computadoras:
+Para que el equipo trabaje sobre la **misma base de datos compartida** y los mismos datos de prueba, la base de datos de Supabase ya está configurada y las tablas creadas. Los nuevos desarrolladores solo deben seguir estos 3 pasos:
 
 ### 1. Clonar el repositorio
 ```bash
@@ -186,44 +186,8 @@ git clone https://github.com/hernangtrz/DevCareer-AI-AWS.git
 cd DevCareer-AI-AWS
 ```
 
-### 2. Crear las tablas en Supabase
-En el SQL Editor de tu proyecto de Supabase, ejecuta:
-```sql
-create table users (
-  id text primary key,
-  email text unique not null,
-  name text,
-  created_at timestamptz default now()
-);
-
-create table interviews (
-  id text primary key,
-  user_id text references users(id),
-  role text,
-  level text,
-  techstack jsonb,
-  type text,
-  questions jsonb,
-  finalized boolean default false,
-  cover_image text,
-  created_at timestamptz default now()
-);
-
-create table feedback (
-  id text primary key,
-  interview_id text references interviews(id),
-  user_id text references users(id),
-  total_score numeric,
-  category_scores jsonb,
-  strengths jsonb,
-  areas_for_improvement jsonb,
-  final_assessment text,
-  english_feedback jsonb,
-  created_at timestamptz default now()
-);
-```
-
-### 3. Configurar los 3 archivos `.env`
+### 2. Configurar los 3 archivos `.env` (con las credenciales del equipo)
+Solicita al líder del proyecto las API keys del equipo y colócalas en cada carpeta:
 
 * **`Backend/.env`**:
   ```env
