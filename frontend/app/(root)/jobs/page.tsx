@@ -309,7 +309,10 @@ export default function JobsPage() {
           <span className="text-xs font-semibold text-zinc-400">
             Mostrando <span className="text-white font-bold">{filteredJobs.length}</span> ofertas encontradas
           </span>
-          <span className="text-[11px] text-zinc-500">Normalizadas con Adapter Pattern</span>
+          <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            Actualizado en tiempo real
+          </span>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
@@ -580,7 +583,7 @@ export default function JobsPage() {
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="flex items-center justify-between gap-3 pt-2 border-t border-zinc-800">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800">
               <button
                 onClick={() => {
                   setShowApplyModal(false);
@@ -589,7 +592,7 @@ export default function JobsPage() {
                 className="inline-flex items-center gap-2 text-xs font-semibold text-pink-400 hover:text-pink-300 cursor-pointer"
               >
                 <Mic className="w-4 h-4" />
-                <span>Practicar entrevista antes de postularme</span>
+                <span>Simular entrevista de esta vacante</span>
               </button>
 
               <div className="flex items-center gap-2">
@@ -597,17 +600,17 @@ export default function JobsPage() {
                   onClick={() => setShowApplyModal(false)}
                   className="px-4 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white text-xs font-semibold cursor-pointer"
                 >
-                  Cancelar
+                  Cerrar
                 </button>
                 <button
                   onClick={() => {
-                    alert("¡Postulación enviada con éxito!");
+                    alert(`¡Datos y carta de presentación preparados! Redirigiendo a la oferta oficial de ${selectedJob.company} en ${selectedJob.source}...`);
                     setShowApplyModal(false);
                   }}
                   className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 cursor-pointer flex items-center gap-2"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Confirmar y Postularme</span>
+                  <span>Copiar Datos y Abrir en {selectedJob.source}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
