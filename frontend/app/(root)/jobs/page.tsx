@@ -28,7 +28,16 @@ import {
   Bookmark,
   RefreshCw,
   Globe,
-  SlidersHorizontal,
+  User,
+  UploadCloud,
+  GraduationCap,
+  Award,
+  Code2,
+  FolderGit2,
+  Building2,
+  Plus,
+  Trash2,
+  Save,
 } from "lucide-react";
 
 interface JobOffer {
@@ -144,10 +153,16 @@ const MOCK_JOBS: JobOffer[] = [
 
 export default function JobsPage() {
   const router = useRouter();
+
+  // Navigation sub-tabs in Jobs
+  const [activeMainTab, setActiveMainTab] = useState<"feed" | "saved" | "profile">("feed");
+  const [profileSubTab, setProfileSubTab] = useState<"personal" | "summary" | "skills" | "experience" | "education">("personal");
+
+  // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlatform, setSelectedPlatform] = useState<string>("all");
   const [selectedSeniority, setSelectedSeniority] = useState<string>("all");
-  const [savedJobs, setSavedJobs] = useState<string[]>([]);
+  const [savedJobs, setSavedJobs] = useState<string[]>(["job-1"]); // Default 1 saved
   const [selectedJob, setSelectedJob] = useState<JobOffer | null>(null);
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [showCustomOfferModal, setShowCustomOfferModal] = useState(false);
@@ -158,11 +173,29 @@ export default function JobsPage() {
   const [generatedLetter, setGeneratedLetter] = useState<string>("");
   const [copiedLetter, setCopiedLetter] = useState(false);
 
+  // Profile Form Mockup State
+  const [profileData, setProfileData] = useState({
+    fullName: "Hernán Gutiérrez",
+    email: "hernan@devcareer.ai",
+    phone: "+57 (300) 123-4567",
+    location: "Barranquilla, Colombia (Remoto)",
+    headline: "Senior Full Stack Engineer · AI Developer · 3+ Años de Experiencia",
+    linkedinUrl: "https://linkedin.com/in/hernangtrz",
+    githubUrl: "https://github.com/hernangtrz",
+    portfolioUrl: "https://hernangtrz.dev",
+    desiredSalaryUSD: "$5,500 USD / mes",
+    summary:
+      "Ingeniero de Software Full Stack especializado en React, Next.js, Node.js y arquitecturas cloud con AWS. Experiencia liderando proyectos de alta concurrencia, integración de modelos de IA y código limpio con principios SOLID y patrones de diseño.",
+    skills: ["React", "TypeScript", "Next.js", "Node.js", "PostgreSQL", "AWS DynamoDB", "Docker", "Tailwind CSS", "LiveKit WebRTC", "Google Gemini"],
+  });
+
   const toggleSaveJob = (id: string) => {
     setSavedJobs((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
   const filteredJobs = MOCK_JOBS.filter((job) => {
+    if (activeMainTab === "saved" && !savedJobs.includes(job.id)) return false;
+
     const matchesSearch =
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -182,7 +215,6 @@ export default function JobsPage() {
   };
 
   const handleManualApply = (job: JobOffer) => {
-    // Redirige directamente al sitio oficial de la oferta externa
     window.open(job.externalUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -197,7 +229,7 @@ export default function JobsPage() {
           `garantizando alta disponibilidad, código limpio y apego a principios SOLID.\n\n` +
           `Me apasiona la cultura técnica de ${selectedJob.company} y estoy convencido de que mis habilidades aportarán valor inmediato a su equipo.\n\n` +
           `Quedo a su entera disposición para una entrevista.\n\n` +
-          `Atentamente,\nHernán Gutiérrez`
+          `Atentamente,\n${profileData.fullName}`
       );
       setGeneratingLetter(false);
     }, 1000);
@@ -211,371 +243,758 @@ export default function JobsPage() {
 
   return (
     <div className="flex flex-col gap-8 min-h-screen pb-16">
-      {/* ── Top Header Banner (Inspired by Modern Job Matching AI) ── */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-indigo-950/40 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-2xl">
-        <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold w-fit">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>AI AGENT MATCHER ACTIVO</span>
+      {/* ── Top Header Banner with Nav Tabs ── */}
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-zinc-900 via-zinc-900 to-indigo-950/40 border border-zinc-800 flex flex-col gap-6 shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex flex-col gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-bold w-fit">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>AI AGENT MATCHER ACTIVO</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
+              ¡Bienvenido de vuelta, {profileData.fullName.split(" ")[0]}! 👋
+            </h1>
+            <p className="text-zinc-400 text-xs md:text-sm max-w-xl">
+              Encontramos <span className="text-emerald-400 font-bold">62 ofertas de empleo</span> altamente compatibles con tu perfil y CV.
+            </p>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-            ¡Bienvenido de vuelta, Hernán! 👋
-          </h1>
-          <p className="text-zinc-400 text-xs md:text-sm max-w-xl">
-            Encontramos <span className="text-emerald-400 font-bold">62 ofertas de empleo</span> altamente compatibles con tu perfil de CV y nivel técnico.
-          </p>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowCustomOfferModal(true)}
+              className="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-indigo-400" />
+              <span>Practicar con mi propia Oferta</span>
+            </button>
+            <Link
+              href="/analytics"
+              className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
+            >
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <span>Ver Métricas</span>
+            </Link>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Navigation Tabs (Jobs / Saved / Profile) */}
+        <div className="flex items-center gap-2 border-t border-zinc-800/80 pt-4 flex-wrap">
           <button
-            onClick={() => setShowCustomOfferModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold transition-all hover:scale-[1.02] cursor-pointer flex items-center gap-2"
+            onClick={() => setActiveMainTab("feed")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeMainTab === "feed"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25"
+                : "bg-zinc-950/60 text-zinc-400 hover:text-white border border-zinc-800"
+            }`}
           >
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span>Practicar con mi propia Oferta</span>
+            <Briefcase className="w-4 h-4" />
+            <span>Explorar Ofertas ({MOCK_JOBS.length})</span>
           </button>
-          <Link
-            href="/analytics"
-            className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-2"
+
+          <button
+            onClick={() => setActiveMainTab("saved")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeMainTab === "saved"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25"
+                : "bg-zinc-950/60 text-zinc-400 hover:text-white border border-zinc-800"
+            }`}
           >
-            <TrendingUp className="w-4 h-4 text-emerald-400" />
-            <span>Ver Métricas</span>
-          </Link>
+            <Bookmark className="w-4 h-4" />
+            <span>Ofertas Guardadas</span>
+            <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[10px] text-zinc-300 font-mono">
+              {savedJobs.length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveMainTab("profile")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeMainTab === "profile"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25"
+                : "bg-zinc-950/60 text-zinc-400 hover:text-white border border-zinc-800"
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Mi Perfil de Postulación</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          </button>
         </div>
       </div>
 
-      {/* ── Connected Job Platforms (Greenhouse, Lever, LinkedIn, Wellfound) ── */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wider">
-            Portales de Empleo Conectados
-          </h2>
-          <span className="text-[11px] text-zinc-500">Actualización en tiempo real</span>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {CONNECTED_PLATFORMS.map((platform) => {
-            const isSelected = selectedPlatform === platform.id;
-            return (
-              <button
-                key={platform.id}
-                onClick={() => setSelectedPlatform(isSelected ? "all" : platform.id)}
-                className={`relative p-4 rounded-2xl border transition-all text-left cursor-pointer flex items-center justify-between group ${
-                  isSelected
-                    ? "bg-emerald-500/10 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
-                    : "bg-zinc-900/70 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-lg shadow-inner">
-                    {platform.icon}
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
-                        {platform.name}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-zinc-500 font-medium">{platform.count} ofertas activas</span>
-                  </div>
-                </div>
-
-                <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                    isSelected ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400"
-                  }`}
-                >
-                  ✓
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* ── Main Layout: 2 Columns (Job Feed Left + Profile Widgets Right) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* ── Left Column: Job Matches Feed (8 cols) ── */}
-        <div className="lg:col-span-8 flex flex-col gap-5">
-          {/* Search & Filter Header */}
-          <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex flex-col gap-3 shadow-xl">
-            <div className="flex items-center gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                <input
-                  type="text"
-                  placeholder="Buscar vacante por rol, tecnología o empresa (ej. React, Python, Nubank)..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                />
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* VISTA 1 & 2: FEED DE OFERTAS & OFERTAS GUARDADAS            */}
+      {/* ────────────────────────────────────────────────────────── */}
+      {(activeMainTab === "feed" || activeMainTab === "saved") && (
+        <>
+          {/* Connected Job Platforms (Greenhouse, Lever, LinkedIn, Wellfound) */}
+          {activeMainTab === "feed" && (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-sm font-bold text-zinc-300 uppercase tracking-wider">
+                  Portales de Empleo Conectados
+                </h2>
+                <span className="text-[11px] text-zinc-500">Actualización en tiempo real</span>
               </div>
 
-              <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-xl p-1 shrink-0">
-                {["all", "Junior", "Mid-Level", "Senior"].map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => setSelectedSeniority(lvl)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      selectedSeniority === lvl ? "bg-indigo-600 text-white" : "text-zinc-400 hover:text-zinc-200"
-                    }`}
-                  >
-                    {lvl === "all" ? "Todos" : lvl}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {CONNECTED_PLATFORMS.map((platform) => {
+                  const isSelected = selectedPlatform === platform.id;
+                  return (
+                    <button
+                      key={platform.id}
+                      onClick={() => setSelectedPlatform(isSelected ? "all" : platform.id)}
+                      className={`relative p-4 rounded-2xl border transition-all text-left cursor-pointer flex items-center justify-between group ${
+                        isSelected
+                          ? "bg-emerald-500/10 border-emerald-500/40 shadow-lg shadow-emerald-500/10"
+                          : "bg-zinc-900/70 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-lg shadow-inner">
+                          {platform.icon}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                            {platform.name}
+                          </span>
+                          <span className="text-[10px] text-zinc-500 font-medium">{platform.count} ofertas activas</span>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          isSelected ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400"
+                        }`}
+                      >
+                        ✓
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Job Feed List */}
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>Top Job Matches</span>
-              <span className="text-xs font-normal text-zinc-500">({filteredJobs.length} resultados)</span>
-            </h2>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedPlatform("all");
-                setSelectedSeniority("all");
-              }}
-              className="text-xs text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <RefreshCw className="w-3 h-3" /> Reiniciar filtros
-            </button>
-          </div>
+          {/* 2 Columns (Job Feed Left + Profile Widgets Right) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left Column: Job Matches Feed */}
+            <div className="lg:col-span-8 flex flex-col gap-5">
+              {/* Search Bar */}
+              <div className="p-4 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex flex-col gap-3 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                    <input
+                      type="text"
+                      placeholder="Buscar vacante por rol, tecnología o empresa (ej. React, Python, Nubank)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                  </div>
 
-          <div className="flex flex-col gap-4">
-            {filteredJobs.map((job) => {
-              const isSaved = savedJobs.includes(job.id);
-              return (
-                <div
-                  key={job.id}
-                  className="p-5 md:p-6 rounded-3xl bg-gradient-to-b from-[#181a20] to-[#0c0d10] border border-zinc-800/90 hover:border-indigo-500/40 transition-all shadow-xl flex flex-col gap-4 group"
-                >
-                  {/* Top card row */}
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3.5 min-w-0">
-                      <div
-                        className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${job.logoGradient} flex items-center justify-center text-white font-black text-sm shadow-md shrink-0`}
+                  <div className="flex items-center gap-1 bg-zinc-950 border border-zinc-800 rounded-xl p-1 shrink-0">
+                    {["all", "Junior", "Mid-Level", "Senior"].map((lvl) => (
+                      <button
+                        key={lvl}
+                        onClick={() => setSelectedSeniority(lvl)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                          selectedSeniority === lvl ? "bg-indigo-600 text-white" : "text-zinc-400 hover:text-zinc-200"
+                        }`}
                       >
-                        {job.companyInitials}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-zinc-200">{job.company}</span>
-                          <span className={`px-2 py-0.2 rounded-md text-[10px] font-bold border ${job.platformBg}`}>
-                            {job.platform}
+                        {lvl === "all" ? "Todos" : lvl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Feed Header */}
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <span>{activeMainTab === "saved" ? "Ofertas Guardadas" : "Top Job Matches"}</span>
+                  <span className="text-xs font-normal text-zinc-500">({filteredJobs.length} resultados)</span>
+                </h2>
+                {activeMainTab === "saved" && (
+                  <span className="text-xs text-indigo-400 font-semibold">Vacantes que marcaste para aplicar después</span>
+                )}
+              </div>
+
+              {/* Jobs Cards */}
+              {filteredJobs.length === 0 ? (
+                <div className="p-12 rounded-3xl bg-zinc-900/40 border border-zinc-800 text-center flex flex-col items-center gap-3">
+                  <Bookmark className="w-8 h-8 text-zinc-600" />
+                  <p className="text-zinc-400 text-sm">No tienes ofertas guardadas actualmente.</p>
+                  <button
+                    onClick={() => setActiveMainTab("feed")}
+                    className="text-xs text-indigo-400 hover:underline cursor-pointer"
+                  >
+                    Explorar todas las ofertas
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredJobs.map((job) => {
+                    const isSaved = savedJobs.includes(job.id);
+                    return (
+                      <div
+                        key={job.id}
+                        className="p-5 md:p-6 rounded-3xl bg-gradient-to-b from-[#181a20] to-[#0c0d10] border border-zinc-800/90 hover:border-indigo-500/40 transition-all shadow-xl flex flex-col gap-4 group"
+                      >
+                        {/* Top row */}
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3.5 min-w-0">
+                            <div
+                              className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${job.logoGradient} flex items-center justify-center text-white font-black text-sm shadow-md shrink-0`}
+                            >
+                              {job.companyInitials}
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-bold text-zinc-200">{job.company}</span>
+                                <span className={`px-2 py-0.2 rounded-md text-[10px] font-bold border ${job.platformBg}`}>
+                                  {job.platform}
+                                </span>
+                                <span className="text-zinc-600 text-xs">•</span>
+                                <span className="text-zinc-500 text-[11px] flex items-center gap-1">
+                                  <Clock className="w-3 h-3" /> {job.postedAgo}
+                                </span>
+                              </div>
+                              <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors truncate mt-0.5">
+                                {job.title}
+                              </h3>
+                            </div>
+                          </div>
+
+                          {/* Match Score */}
+                          <div className="flex flex-col items-end shrink-0">
+                            <span className="text-base font-extrabold font-mono text-emerald-400">
+                              {job.matchScore}% Match
+                            </span>
+                            <span className="text-[10px] text-emerald-300/70 font-semibold">
+                              {job.matchLevel} afinidad
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Mid details */}
+                        <div className="flex items-center gap-4 text-xs text-zinc-400 flex-wrap">
+                          <span className="flex items-center gap-1.5 text-zinc-200 font-semibold">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                            {job.salaryMonthlyUSD}
                           </span>
-                          <span className="text-zinc-600 text-xs">•</span>
-                          <span className="text-zinc-500 text-[11px] flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {job.postedAgo}
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-zinc-500" />
+                            {job.location}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 text-[10px] font-bold border border-indigo-500/20">
+                            {job.seniority}
                           </span>
                         </div>
-                        <h3 className="text-base font-bold text-white group-hover:text-indigo-300 transition-colors truncate mt-0.5">
-                          {job.title}
-                        </h3>
+
+                        {/* Skills */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-zinc-500 uppercase font-bold mr-1">Skills:</span>
+                          {job.matchedSkills.map((sk) => (
+                            <span
+                              key={sk}
+                              className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 text-[11px] font-medium border border-emerald-500/20"
+                            >
+                              ✓ {sk}
+                            </span>
+                          ))}
+                          {job.missingSkills.map((sk) => (
+                            <span
+                              key={sk}
+                              className="px-2 py-0.5 rounded-md bg-zinc-800/60 text-zinc-400 text-[11px] font-medium border border-zinc-700"
+                            >
+                              + {sk}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Action buttons */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800/80">
+                          <button
+                            onClick={() => router.push("/interview")}
+                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer"
+                          >
+                            <Mic className="w-4 h-4" />
+                            <span>Simular entrevista para esta oferta</span>
+                          </button>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleSaveJob(job.id)}
+                              className={`p-2 rounded-xl border transition-colors cursor-pointer ${
+                                isSaved
+                                  ? "bg-indigo-600/20 border-indigo-500/40 text-indigo-300"
+                                  : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
+                              }`}
+                              title={isSaved ? "Guardada en favoritos" : "Guardar oferta"}
+                            >
+                              <Bookmark className="w-4 h-4" />
+                            </button>
+
+                            <button
+                              onClick={() => handleManualApply(job)}
+                              className="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
+                              title="Abrir formulario oficial en sitio de la empresa"
+                            >
+                              <span>Ir al sitio oficial</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+
+                            <button
+                              onClick={() => handleOpenAiApply(job)}
+                              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02] cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              <span>Postularme con IA</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Match Score Pill */}
-                    <div className="flex flex-col items-end shrink-0">
-                      <span className="text-base font-extrabold font-mono text-emerald-400">
-                        {job.matchScore}% Match
-                      </span>
-                      <span className="text-[10px] text-emerald-300/70 font-semibold">
-                        {job.matchLevel} afinidad
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Mid details */}
-                  <div className="flex items-center gap-4 text-xs text-zinc-400 flex-wrap">
-                    <span className="flex items-center gap-1.5 text-zinc-200 font-semibold">
-                      <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                      {job.salaryMonthlyUSD}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-zinc-500" />
-                      {job.location}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 text-[10px] font-bold border border-indigo-500/20">
-                      {job.seniority}
-                    </span>
-                  </div>
-
-                  {/* Skills tags */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] text-zinc-500 uppercase font-bold mr-1">Skills:</span>
-                    {job.matchedSkills.map((sk) => (
-                      <span
-                        key={sk}
-                        className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 text-[11px] font-medium border border-emerald-500/20"
-                      >
-                        ✓ {sk}
-                      </span>
-                    ))}
-                    {job.missingSkills.map((sk) => (
-                      <span
-                        key={sk}
-                        className="px-2 py-0.5 rounded-md bg-zinc-800/60 text-zinc-400 text-[11px] font-medium border border-zinc-700"
-                      >
-                        + {sk}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Action Buttons Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800/80">
-                    <button
-                      onClick={() => router.push("/interview")}
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors cursor-pointer"
-                    >
-                      <Mic className="w-4 h-4" />
-                      <span>Simular entrevista para esta oferta</span>
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleSaveJob(job.id)}
-                        className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-                          isSaved
-                            ? "bg-indigo-600/20 border-indigo-500/40 text-indigo-300"
-                            : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
-                        }`}
-                        title="Guardar oferta"
-                      >
-                        <Bookmark className="w-4 h-4" />
-                      </button>
-
-                      {/* Botón de Postulación Manual -> Redirige al sitio oficial */}
-                      <button
-                        onClick={() => handleManualApply(job)}
-                        className="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer"
-                        title="Abrir formulario oficial en sitio de la empresa"
-                      >
-                        <span>Ir al sitio oficial</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </button>
-
-                      {/* Botón de Postulación con IA -> Abre modal con auto-relleno y carta */}
-                      <button
-                        onClick={() => handleOpenAiApply(job)}
-                        className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition-all hover:scale-[1.02] cursor-pointer flex items-center gap-1.5"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Postularme con IA</span>
-                      </button>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── Right Column: Profile Completeness & Widgets (4 cols) ── */}
-        <div className="lg:col-span-4 flex flex-col gap-5">
-          {/* Profile Completeness Widget (Matching JobBuddy UX) */}
-          <div className="p-6 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl flex flex-col gap-5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                Estado de tu Perfil
-              </h3>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold">
-                Listo para aplicar
-              </span>
+              )}
             </div>
 
-            {/* Circular Progress Ring */}
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-950/60 border border-zinc-850">
-              <div className="relative flex items-center justify-center w-16 h-16 shrink-0">
-                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 72 72">
-                  <circle
-                    cx="36"
-                    cy="36"
-                    r="30"
-                    className="text-zinc-800"
-                    strokeWidth="7"
-                    stroke="currentColor"
-                    fill="transparent"
-                  />
-                  <circle
-                    cx="36"
-                    cy="36"
-                    r="30"
-                    fill="transparent"
-                    stroke="#10b981"
-                    strokeWidth="7"
-                    strokeDasharray="188"
-                    strokeDashoffset="10"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute text-white font-extrabold text-sm">95%</span>
+            {/* Right Column: Profile Completeness Widgets */}
+            <div className="lg:col-span-4 flex flex-col gap-5">
+              {/* Profile Completeness Widget */}
+              <div className="p-6 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl flex flex-col gap-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                    Estado de tu Perfil
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                    Listo para aplicar
+                  </span>
+                </div>
+
+                {/* Progress Ring */}
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-950/60 border border-zinc-850">
+                  <div className="relative flex items-center justify-center w-16 h-16 shrink-0">
+                    <svg className="w-16 h-16 -rotate-90" viewBox="0 0 72 72">
+                      <circle
+                        cx="36"
+                        cy="36"
+                        r="30"
+                        className="text-zinc-800"
+                        strokeWidth="7"
+                        stroke="currentColor"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="36"
+                        cy="36"
+                        r="30"
+                        fill="transparent"
+                        stroke="#10b981"
+                        strokeWidth="7"
+                        strokeDasharray="188"
+                        strokeDashoffset="10"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <span className="absolute text-white font-extrabold text-sm">98%</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white">Perfil Optimizado 🎉</span>
+                    <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">
+                      Tu CV y datos están listos para postularte con un clic.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Checklist */}
+                <div className="flex flex-col gap-2 text-xs">
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Información Básica & Contacto</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Resumen Profesional con Verbos de Acción</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Experiencia Laboral Cuantificada</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>Stack Tecnológico Validado</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>CV en Formato ATS Verificado</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setActiveMainTab("profile")}
+                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <span>Editar Mi Perfil de Postulación</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-white">Perfil Optimizado 🎉</span>
-                <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">
-                  Tu CV y stack están listos para postularte con un solo clic.
+
+              {/* Daily AI Match Widget */}
+              <div className="p-5 rounded-3xl bg-gradient-to-b from-indigo-950/30 to-zinc-900 border border-indigo-500/20 shadow-xl flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-indigo-300 text-xs font-bold">
+                    <Zap className="w-4 h-4 text-indigo-400" />
+                    <span>Postulaciones Rápidas de Hoy</span>
+                  </div>
+                  <span className="text-xs font-bold font-mono text-emerald-400">5 / 5 libres</span>
+                </div>
+                <p className="text-zinc-400 text-xs leading-relaxed">
+                  Tu plan PRO te permite generar cartas de presentación y auto-rellenar postulaciones sin límite diario.
                 </p>
               </div>
             </div>
+          </div>
+        </>
+      )}
 
-            {/* Checklist of elements */}
-            <div className="flex flex-col gap-2 text-xs">
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Información Básica & Contacto</span>
+      {/* ────────────────────────────────────────────────────────── */}
+      {/* VISTA 3: MI PERFIL DE POSTULACIÓN (JobBuddy inspired)      */}
+      {/* ────────────────────────────────────────────────────────── */}
+      {activeMainTab === "profile" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Profile Completeness Sidebar */}
+          <div className="lg:col-span-4 flex flex-col gap-5">
+            <div className="p-6 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl flex flex-col gap-5 sticky top-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Completitud del Perfil
+                </h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                  Excelente 🚀
+                </span>
               </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Resumen Profesional con Verbos de Acción</span>
+
+              {/* Big Progress Circle */}
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-950/60 border border-zinc-850">
+                <div className="relative flex items-center justify-center w-16 h-16 shrink-0">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 72 72">
+                    <circle
+                      cx="36"
+                      cy="36"
+                      r="30"
+                      className="text-zinc-800"
+                      strokeWidth="7"
+                      stroke="currentColor"
+                      fill="transparent"
+                    />
+                    <circle
+                      cx="36"
+                      cy="36"
+                      r="30"
+                      fill="transparent"
+                      stroke="#10b981"
+                      strokeWidth="7"
+                      strokeDasharray="188"
+                      strokeDashoffset="6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span className="absolute text-white font-black text-sm">98%</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white">¡Perfil Completo! 🎉</span>
+                  <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">
+                    Tus datos serán usados automáticamente para postularte a las vacantes.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Experiencia Laboral Cuantificada</span>
+
+              {/* Sub-sections links */}
+              <div className="flex flex-col gap-1 text-xs">
+                {[
+                  { id: "personal", label: "Información Personal & Contacto", icon: <User className="w-4 h-4" /> },
+                  { id: "summary", label: "Resumen Profesional (Headline)", icon: <FileText className="w-4 h-4" /> },
+                  { id: "skills", label: "Habilidades & Tech Stack", icon: <Code2 className="w-4 h-4" /> },
+                  { id: "experience", label: "Experiencia Laboral", icon: <Building2 className="w-4 h-4" /> },
+                  { id: "education", label: "Educación & Certificaciones", icon: <GraduationCap className="w-4 h-4" /> },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setProfileSubTab(item.id as any)}
+                    className={`flex items-center justify-between p-3 rounded-xl transition-all text-left cursor-pointer ${
+                      profileSubTab === item.id
+                        ? "bg-indigo-600 text-white font-semibold shadow-md"
+                        : "text-zinc-400 hover:text-white hover:bg-zinc-850"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span>{item.icon}</span>
+                      <span>{item.label}</span>
+                    </div>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  </button>
+                ))}
               </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Stack Tecnológico Validado</span>
-              </div>
-              <div className="flex items-center gap-2 text-zinc-300">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>CV en Formato ATS Verificado</span>
+
+              <div className="pt-2 border-t border-zinc-800">
+                <Link
+                  href="/cv"
+                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-semibold transition-all text-center flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Sincronizar con CV Hub</span>
+                </Link>
               </div>
             </div>
-
-            <Link
-              href="/cv"
-              className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition-all text-center flex items-center justify-center gap-2"
-            >
-              <span>Mejorar Perfil en CV Hub</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
           </div>
 
-          {/* Daily AI Match Widget */}
-          <div className="p-5 rounded-3xl bg-gradient-to-b from-indigo-950/30 to-zinc-900 border border-indigo-500/20 shadow-xl flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-indigo-300 text-xs font-bold">
-                <Zap className="w-4 h-4 text-indigo-400" />
-                <span>Postulaciones Rápidas de Hoy</span>
+          {/* Right Column: Editable Profile Forms */}
+          <div className="lg:col-span-8 flex flex-col gap-6 p-6 md:p-8 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-lg font-bold text-white">Mi Perfil para Postulaciones</h2>
+                <p className="text-xs text-zinc-400">
+                  Revisa y actualiza los datos que el agente de IA usará para auto-rellenar tus postulaciones.
+                </p>
               </div>
-              <span className="text-xs font-bold font-mono text-emerald-400">5 / 5 libres</span>
+
+              <button
+                onClick={() => alert("¡Perfil guardado y sincronizado con éxito!")}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Guardar Cambios</span>
+              </button>
             </div>
-            <p className="text-zinc-400 text-xs leading-relaxed">
-              Tu plan PRO te permite generar cartas de presentación y auto-rellenar postulaciones sin límite diario.
-            </p>
+
+            {/* SubTab 1: Personal Info */}
+            {profileSubTab === "personal" && (
+              <div className="flex flex-col gap-5">
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                  Información Básica & Contacto
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">Nombre Completo</label>
+                    <input
+                      type="text"
+                      value={profileData.fullName}
+                      onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      value={profileData.email}
+                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">Teléfono / WhatsApp</label>
+                    <input
+                      type="text"
+                      value={profileData.phone}
+                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">Ubicación / Modalidad</label>
+                    <input
+                      type="text"
+                      value={profileData.location}
+                      onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-400">Titular Profesional (Headline)</label>
+                  <input
+                    type="text"
+                    value={profileData.headline}
+                    onChange={(e) => setProfileData({ ...profileData, headline: e.target.value })}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider pt-3">
+                  Enlaces Profesionales & Pretensión Salarial
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">URL de LinkedIn</label>
+                    <input
+                      type="text"
+                      value={profileData.linkedinUrl}
+                      onChange={(e) => setProfileData({ ...profileData, linkedinUrl: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">URL de GitHub</label>
+                    <input
+                      type="text"
+                      value={profileData.githubUrl}
+                      onChange={(e) => setProfileData({ ...profileData, githubUrl: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-zinc-400">Portafolio Web</label>
+                    <input
+                      type="text"
+                      value={profileData.portfolioUrl}
+                      onChange={(e) => setProfileData({ ...profileData, portfolioUrl: e.target.value })}
+                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[11px] font-semibold text-emerald-400">Pretensión Salarial Objetivo (USD)</label>
+                    <input
+                      type="text"
+                      value={profileData.desiredSalaryUSD}
+                      onChange={(e) => setProfileData({ ...profileData, desiredSalaryUSD: e.target.value })}
+                      className="bg-zinc-950 border border-emerald-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SubTab 2: Summary */}
+            {profileSubTab === "summary" && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                    Resumen Profesional
+                  </h3>
+                  <button
+                    onClick={() => alert("¡Resumen profesional optimizado con verbos de acción por IA!")}
+                    className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Optimizar con IA</span>
+                  </button>
+                </div>
+
+                <textarea
+                  rows={6}
+                  value={profileData.summary}
+                  onChange={(e) => setProfileData({ ...profileData, summary: e.target.value })}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs text-zinc-200 leading-relaxed focus:outline-none focus:border-indigo-500 font-sans"
+                />
+              </div>
+            )}
+
+            {/* SubTab 3: Skills */}
+            {profileSubTab === "skills" && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                  Habilidades & Stack Tecnológico
+                </h3>
+
+                <div className="flex items-center gap-2 flex-wrap p-4 rounded-2xl bg-zinc-950 border border-zinc-800">
+                  {profileData.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 text-xs font-semibold flex items-center gap-2"
+                    >
+                      <span>{skill}</span>
+                      <button
+                        onClick={() =>
+                          setProfileData({
+                            ...profileData,
+                            skills: profileData.skills.filter((_, i) => i !== index),
+                          })
+                        }
+                        className="text-indigo-400 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const newSkill = prompt("Ingresa una nueva tecnología (ej. GraphQL, Python, AWS):");
+                      if (newSkill) setProfileData({ ...profileData, skills: [...profileData.skills, newSkill] });
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Agregar Skill
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SubTab 4: Experience */}
+            {profileSubTab === "experience" && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                    Experiencia Laboral Reciente
+                  </h3>
+                  <button
+                    onClick={() => alert("Experiencia agregada")}
+                    className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Agregar Empresa
+                  </button>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col gap-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="text-sm font-bold text-white">Senior Frontend Engineer</h4>
+                      <p className="text-xs text-indigo-300">TechCorp Solutions · Remoto</p>
+                    </div>
+                    <span className="text-[11px] text-zinc-500">2023 - Presente</span>
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-relaxed mt-1">
+                    • Lideré el desarrollo de la plataforma web central con Next.js y TypeScript, mejorando los tiempos de carga en un 42% y el score SEO al 98%.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* SubTab 5: Education */}
+            {profileSubTab === "education" && (
+              <div className="flex flex-col gap-4">
+                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
+                  Educación & Títulos
+                </h3>
+                <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col gap-1">
+                  <h4 className="text-sm font-bold text-white">Ingeniería de Sistemas y Computación</h4>
+                  <p className="text-xs text-indigo-300">Universidad del Norte · 2020 - 2025</p>
+                  <p className="text-[11px] text-zinc-400">Énfasis en Arquitectura de Software, Cloud Computing y Patrones de Diseño.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* ── MODAL: Postulación con IA (Auto-Relleno y Cover Letter) ── */}
+      {/* ── MODAL: Postulación con IA ── */}
       {showApplyModal && selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
           <div className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl flex flex-col gap-6 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
+            {/* Header */}
             <div className="flex items-start justify-between gap-4 border-b border-zinc-800 pb-4">
               <div className="flex items-center gap-3">
                 <div
@@ -600,7 +1019,7 @@ export default function JobsPage() {
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-start gap-3 text-xs">
               <Zap className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div className="flex flex-col gap-1">
-                <span className="font-bold text-emerald-300">Datos auto-completados desde tu CV:</span>
+                <span className="font-bold text-emerald-300">Datos auto-completados desde tu perfil:</span>
                 <p className="text-zinc-300 text-[11px]">
                   Tus datos personales y perfil profesional están preparados. Al confirmar, podrás copiar tu carta de presentación e ir directamente a la plataforma de {selectedJob.platform}.
                 </p>
@@ -613,7 +1032,7 @@ export default function JobsPage() {
                 <label className="text-[11px] font-semibold text-zinc-400">Nombre Completo</label>
                 <input
                   type="text"
-                  defaultValue="Hernán Gutiérrez"
+                  defaultValue={profileData.fullName}
                   className="bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -621,7 +1040,7 @@ export default function JobsPage() {
                 <label className="text-[11px] font-semibold text-zinc-400">Correo Electrónico</label>
                 <input
                   type="email"
-                  defaultValue="hernan@devcareer.ai"
+                  defaultValue={profileData.email}
                   className="bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -629,7 +1048,7 @@ export default function JobsPage() {
                 <label className="text-[11px] font-semibold text-zinc-400">LinkedIn / Portafolio</label>
                 <input
                   type="text"
-                  defaultValue="linkedin.com/in/hernangtrz"
+                  defaultValue={profileData.linkedinUrl}
                   className="bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -637,7 +1056,7 @@ export default function JobsPage() {
                 <label className="text-[11px] font-semibold text-zinc-400">Pretensión Salarial (USD)</label>
                 <input
                   type="text"
-                  defaultValue="$5,800 USD / mes"
+                  defaultValue={profileData.desiredSalaryUSD}
                   className="bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
