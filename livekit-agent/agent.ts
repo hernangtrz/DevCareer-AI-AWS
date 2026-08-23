@@ -38,7 +38,7 @@ export default defineAgent({
   entry: async (ctx: JobContext) => {
     console.log(`[Agent] Conectando a la sala: ${ctx.job.room?.name || 'desconocida'}`);
     await ctx.connect();
-    console.log(`[Agent] Conectado exitosamente.`);
+    console.log(`[Agent] Conectado a LiveKit.`);
 
     const roomName = ctx.job.room?.name || '';
     const parts = roomName.split('_');
@@ -130,6 +130,10 @@ export default defineAgent({
         `- Al finalizar todas las preguntas, agradece formalmente al usuario por su tiempo, dile que su entrevista ha concluido y que el sistema generará su reporte en el dashboard de inmediato. Despídete amablemente.`;
     }
 
+    // Groq como LLM (usando modelo disponible y activo)
+    const groqModel = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+    console.log(`[Agent] Utilizando modelo LLM en Groq: ${groqModel}`);
+
     // Crear el pipeline con AgentSession
     const session = new voice.AgentSession({
       vad,
@@ -138,10 +142,9 @@ export default defineAgent({
         model: 'nova-2-general',
         language: config.language,
       }),
-      // Groq como LLM
-      llm: new openai.LLM({
-        model: 'llama-3.3-70b-versatile',
-        baseURL: 'https://api.groq.com/openai/v1',
+      // Groq como LLM mediante plugin oficial
+      llm: openai.LLM.withGroq({
+        model: groqModel,
         apiKey: process.env.GROQ_API_KEY,
       }),
       // Cartesia TTS dinámico según la voz elegida
@@ -152,18 +155,31 @@ export default defineAgent({
         encoding: 'pcm_s16le',
         sampleRate: 16000,
       }),
-      // Configuración de turnos estable
-      turnHandling: {
-        preemptiveGeneration: { enabled: false },
-        endpointing: {
-          minDelay: 1600,
-        },
-        interruption: {
-          mode: 'vad',
-          minDuration: 800,
-          resumeFalseInterruption: false,
-        },
-      },
+    });
+
+    // Logging de eventos para monitoreo y depuración en tiempo real
+    session.on(voice.AgentSessionEventTypes.Error, (ev) => {
+      console.error('[Agent] Error en sesión de voz:', ev);
+    });
+
+    session.on(voice.AgentSessionEventTypes.UserInputTranscribed, (ev) => {
+      if (ev.transcript?.trim()) {
+        console.log(`[Agent] Transcripción (${ev.isFinal ? 'FINAL' : 'parcial'}): "${ev.transcript.trim()}"`);
+      }
+    });
+
+    session.on(voice.AgentSessionEventTypes.UserStateChanged, (ev) => {
+      console.log(`[Agent] Estado del candidato: ${ev.oldState} -> ${ev.newState}`);
+    });
+
+    session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => {
+      console.log(`[Agent] Estado del agente: ${ev.oldState} -> ${ev.newState}`);
+    });
+
+    session.on(voice.AgentSessionEventTypes.ConversationItemAdded, (ev) => {
+      if ('role' in ev.item) {
+        console.log(`[Agent] Historial [${ev.item.role}]: ${(ev.item.content || []).map((c: any) => typeof c === 'string' ? c : c?.text || '').join(' ')}`);
+      }
     });
 
     const agent = new voice.Agent({
@@ -171,13 +187,18 @@ export default defineAgent({
       tools: {},
     });
 
-    // Iniciar la sesión de voz
+    // Iniciar la sesión vinculada a la sala de LiveKit
     await session.start({
       agent,
       room: ctx.room,
     });
 
-    console.log('[Agent] Sesión de voz iniciada. Enviando saludo inicial...');
+    console.log('[Agent] Sesión iniciada. Esperando a que el participante se una...');
+    const participant = await ctx.waitForParticipant();
+    console.log(`[Agent] Participante conectado (${participant.identity}). Enviando saludo inicial...`);
+
+    // Pausa breve para garantizar que el canal WebRTC esté listo
+    await new Promise((r) => setTimeout(r, 600));
     await session.say(greeting);
   },
 });
@@ -188,3 +209,4 @@ cli.runApp(
     agent: fileURLToPath(import.meta.url),
   })
 );
+
