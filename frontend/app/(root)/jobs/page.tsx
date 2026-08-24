@@ -154,9 +154,8 @@ const MOCK_JOBS: JobOffer[] = [
 export default function JobsPage() {
   const router = useRouter();
 
-  // Navigation sub-tabs in Jobs
-  const [activeMainTab, setActiveMainTab] = useState<"feed" | "saved" | "profile">("feed");
-  const [profileSubTab, setProfileSubTab] = useState<"personal" | "summary" | "skills" | "experience" | "education">("personal");
+  // Navigation sub-tabs in Jobs (Feed / Saved)
+  const [activeMainTab, setActiveMainTab] = useState<"feed" | "saved">("feed");
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
@@ -173,8 +172,8 @@ export default function JobsPage() {
   const [generatedLetter, setGeneratedLetter] = useState<string>("");
   const [copiedLetter, setCopiedLetter] = useState(false);
 
-  // Profile Form Mockup State
-  const [profileData, setProfileData] = useState({
+  // Profile Data for Auto-fill
+  const profileData = {
     fullName: "Hernán Gutiérrez",
     email: "hernan@devcareer.ai",
     phone: "+57 (300) 123-4567",
@@ -184,10 +183,7 @@ export default function JobsPage() {
     githubUrl: "https://github.com/hernangtrz",
     portfolioUrl: "https://hernangtrz.dev",
     desiredSalaryUSD: "$5,500 USD / mes",
-    summary:
-      "Ingeniero de Software Full Stack especializado en React, Next.js, Node.js y arquitecturas cloud con AWS. Experiencia liderando proyectos de alta concurrencia, integración de modelos de IA y código limpio con principios SOLID y patrones de diseño.",
-    skills: ["React", "TypeScript", "Next.js", "Node.js", "PostgreSQL", "AWS DynamoDB", "Docker", "Tailwind CSS", "LiveKit WebRTC", "Google Gemini"],
-  });
+  };
 
   const toggleSaveJob = (id: string) => {
     setSavedJobs((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
@@ -277,7 +273,7 @@ export default function JobsPage() {
           </div>
         </div>
 
-        {/* Navigation Tabs (Jobs / Saved / Profile) */}
+        {/* Navigation Tabs (Jobs / Saved) */}
         <div className="flex items-center gap-2 border-t border-zinc-800/80 pt-4 flex-wrap">
           <button
             onClick={() => setActiveMainTab("feed")}
@@ -304,19 +300,6 @@ export default function JobsPage() {
             <span className="px-1.5 py-0.2 rounded-full bg-zinc-800 text-[10px] text-zinc-300 font-mono">
               {savedJobs.length}
             </span>
-          </button>
-
-          <button
-            onClick={() => setActiveMainTab("profile")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeMainTab === "profile"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/25"
-                : "bg-zinc-950/60 text-zinc-400 hover:text-white border border-zinc-800"
-            }`}
-          >
-            <User className="w-4 h-4" />
-            <span>Mi Perfil de Postulación</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
           </button>
         </div>
       </div>
@@ -633,13 +616,13 @@ export default function JobsPage() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setActiveMainTab("profile")}
+                <Link
+                  href="/profile"
                   className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition-all text-center flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <span>Editar Mi Perfil de Postulación</span>
+                  <span>Ver / Editar Mi Perfil Completo</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                </Link>
               </div>
 
               {/* Daily AI Match Widget */}
@@ -658,336 +641,6 @@ export default function JobsPage() {
             </div>
           </div>
         </>
-      )}
-
-      {/* ────────────────────────────────────────────────────────── */}
-      {/* VISTA 3: MI PERFIL DE POSTULACIÓN (JobBuddy inspired)      */}
-      {/* ────────────────────────────────────────────────────────── */}
-      {activeMainTab === "profile" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Profile Completeness Sidebar */}
-          <div className="lg:col-span-4 flex flex-col gap-5">
-            <div className="p-6 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl flex flex-col gap-5 sticky top-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
-                  Completitud del Perfil
-                </h3>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-bold">
-                  Excelente 🚀
-                </span>
-              </div>
-
-              {/* Big Progress Circle */}
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-zinc-950/60 border border-zinc-850">
-                <div className="relative flex items-center justify-center w-16 h-16 shrink-0">
-                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 72 72">
-                    <circle
-                      cx="36"
-                      cy="36"
-                      r="30"
-                      className="text-zinc-800"
-                      strokeWidth="7"
-                      stroke="currentColor"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="36"
-                      cy="36"
-                      r="30"
-                      fill="transparent"
-                      stroke="#10b981"
-                      strokeWidth="7"
-                      strokeDasharray="188"
-                      strokeDashoffset="6"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute text-white font-black text-sm">98%</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">¡Perfil Completo! 🎉</span>
-                  <p className="text-[11px] text-zinc-400 leading-tight mt-0.5">
-                    Tus datos serán usados automáticamente para postularte a las vacantes.
-                  </p>
-                </div>
-              </div>
-
-              {/* Sub-sections links */}
-              <div className="flex flex-col gap-1 text-xs">
-                {[
-                  { id: "personal", label: "Información Personal & Contacto", icon: <User className="w-4 h-4" /> },
-                  { id: "summary", label: "Resumen Profesional (Headline)", icon: <FileText className="w-4 h-4" /> },
-                  { id: "skills", label: "Habilidades & Tech Stack", icon: <Code2 className="w-4 h-4" /> },
-                  { id: "experience", label: "Experiencia Laboral", icon: <Building2 className="w-4 h-4" /> },
-                  { id: "education", label: "Educación & Certificaciones", icon: <GraduationCap className="w-4 h-4" /> },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setProfileSubTab(item.id as any)}
-                    className={`flex items-center justify-between p-3 rounded-xl transition-all text-left cursor-pointer ${
-                      profileSubTab === item.id
-                        ? "bg-indigo-600 text-white font-semibold shadow-md"
-                        : "text-zinc-400 hover:text-white hover:bg-zinc-850"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span>{item.icon}</span>
-                      <span>{item.label}</span>
-                    </div>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-2 border-t border-zinc-800">
-                <Link
-                  href="/cv"
-                  className="w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 hover:text-white text-xs font-semibold transition-all text-center flex items-center justify-center gap-2"
-                >
-                  <FileText className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Sincronizar con CV Hub</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Editable Profile Forms */}
-          <div className="lg:col-span-8 flex flex-col gap-6 p-6 md:p-8 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-2xl">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-lg font-bold text-white">Mi Perfil para Postulaciones</h2>
-                <p className="text-xs text-zinc-400">
-                  Revisa y actualiza los datos que el agente de IA usará para auto-rellenar tus postulaciones.
-                </p>
-              </div>
-
-              <button
-                onClick={() => alert("¡Perfil guardado y sincronizado con éxito!")}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 flex items-center gap-1.5 cursor-pointer"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>Guardar Cambios</span>
-              </button>
-            </div>
-
-            {/* SubTab 1: Personal Info */}
-            {profileSubTab === "personal" && (
-              <div className="flex flex-col gap-5">
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                  Información Básica & Contacto
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">Nombre Completo</label>
-                    <input
-                      type="text"
-                      value={profileData.fullName}
-                      onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">Correo Electrónico</label>
-                    <input
-                      type="email"
-                      value={profileData.email}
-                      onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">Teléfono / WhatsApp</label>
-                    <input
-                      type="text"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">Ubicación / Modalidad</label>
-                    <input
-                      type="text"
-                      value={profileData.location}
-                      onChange={(e) => setProfileData({ ...profileData, location: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-zinc-400">Titular Profesional (Headline)</label>
-                  <input
-                    type="text"
-                    value={profileData.headline}
-                    onChange={(e) => setProfileData({ ...profileData, headline: e.target.value })}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider pt-3">
-                  Enlaces Profesionales & Pretensión Salarial
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">URL de LinkedIn</label>
-                    <input
-                      type="text"
-                      value={profileData.linkedinUrl}
-                      onChange={(e) => setProfileData({ ...profileData, linkedinUrl: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">URL de GitHub</label>
-                    <input
-                      type="text"
-                      value={profileData.githubUrl}
-                      onChange={(e) => setProfileData({ ...profileData, githubUrl: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-zinc-400">Portafolio Web</label>
-                    <input
-                      type="text"
-                      value={profileData.portfolioUrl}
-                      onChange={(e) => setProfileData({ ...profileData, portfolioUrl: e.target.value })}
-                      className="bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-emerald-400">Pretensión Salarial Objetivo (USD)</label>
-                    <input
-                      type="text"
-                      value={profileData.desiredSalaryUSD}
-                      onChange={(e) => setProfileData({ ...profileData, desiredSalaryUSD: e.target.value })}
-                      className="bg-zinc-950 border border-emerald-500/30 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-400 font-semibold"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* SubTab 2: Summary */}
-            {profileSubTab === "summary" && (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                    Resumen Profesional
-                  </h3>
-                  <button
-                    onClick={() => alert("¡Resumen profesional optimizado con verbos de acción por IA!")}
-                    className="px-3 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Optimizar con IA</span>
-                  </button>
-                </div>
-
-                <textarea
-                  rows={6}
-                  value={profileData.summary}
-                  onChange={(e) => setProfileData({ ...profileData, summary: e.target.value })}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-xs text-zinc-200 leading-relaxed focus:outline-none focus:border-indigo-500 font-sans"
-                />
-              </div>
-            )}
-
-            {/* SubTab 3: Skills */}
-            {profileSubTab === "skills" && (
-              <div className="flex flex-col gap-4">
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                  Habilidades & Stack Tecnológico
-                </h3>
-
-                <div className="flex items-center gap-2 flex-wrap p-4 rounded-2xl bg-zinc-950 border border-zinc-800">
-                  {profileData.skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-200 text-xs font-semibold flex items-center gap-2"
-                    >
-                      <span>{skill}</span>
-                      <button
-                        onClick={() =>
-                          setProfileData({
-                            ...profileData,
-                            skills: profileData.skills.filter((_, i) => i !== index),
-                          })
-                        }
-                        className="text-indigo-400 hover:text-white cursor-pointer"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                  <button
-                    onClick={() => {
-                      const newSkill = prompt("Ingresa una nueva tecnología (ej. GraphQL, Python, AWS):");
-                      if (newSkill) setProfileData({ ...profileData, skills: [...profileData.skills, newSkill] });
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Agregar Skill
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* SubTab 4: Experience */}
-            {profileSubTab === "experience" && (
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                    Experiencia Laboral Reciente
-                  </h3>
-                  <button
-                    onClick={() => alert("Experiencia agregada")}
-                    className="px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" /> Agregar Empresa
-                  </button>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col gap-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-white">Senior Frontend Engineer</h4>
-                      <p className="text-xs text-indigo-300">TechCorp Solutions · Remoto</p>
-                    </div>
-                    <span className="text-[11px] text-zinc-500">2023 - Presente</span>
-                  </div>
-                  <p className="text-xs text-zinc-400 leading-relaxed mt-1">
-                    • Lideré el desarrollo de la plataforma web central con Next.js y TypeScript, mejorando los tiempos de carga en un 42% y el score SEO al 98%.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* SubTab 5: Education */}
-            {profileSubTab === "education" && (
-              <div className="flex flex-col gap-4">
-                <h3 className="text-xs font-bold text-zinc-300 uppercase tracking-wider">
-                  Educación & Títulos
-                </h3>
-                <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col gap-1">
-                  <h4 className="text-sm font-bold text-white">Ingeniería de Sistemas y Computación</h4>
-                  <p className="text-xs text-indigo-300">Universidad del Norte · 2020 - 2025</p>
-                  <p className="text-[11px] text-zinc-400">Énfasis en Arquitectura de Software, Cloud Computing y Patrones de Diseño.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       )}
 
       {/* ── MODAL: Postulación con IA ── */}

@@ -7,6 +7,7 @@ export const translations = {
     nav_code_arena: "Retos & Patrones",
     nav_jobs: "Empleos & Match",
     nav_analytics: "Progreso & Analytics",
+    nav_profile: "Mi Perfil",
     nav_new: "Nuevo",
     
     // Dashboard
@@ -74,6 +75,7 @@ export const translations = {
     nav_code_arena: "Code & Patterns",
     nav_jobs: "Jobs & Match",
     nav_analytics: "Progress & Analytics",
+    nav_profile: "My Profile",
     nav_new: "New",
     
     // Dashboard

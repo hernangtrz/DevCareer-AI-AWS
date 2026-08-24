@@ -14,6 +14,7 @@ import {
   Plus,
   Menu,
   X,
+  User,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import UserMenu from "@/components/UserMenu";
@@ -73,6 +74,13 @@ export default function AppSidebar({ userName, userEmail }: AppSidebarProps) {
       icon: <BarChart3 className="w-4 h-4" />,
       active: pathname.startsWith("/analytics"),
       badge: "Próximamente",
+    },
+    {
+      href: "/profile",
+      label: t("nav_profile") || "Mi Perfil",
+      icon: <User className="w-4 h-4" />,
+      active: pathname.startsWith("/profile"),
+      badge: null,
     },
   ];
 
