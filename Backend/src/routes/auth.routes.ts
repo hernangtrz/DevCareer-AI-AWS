@@ -3,15 +3,14 @@ import { cognitoIdVerifier } from "../config/cognito";
 import { supabase } from "../config/supabase";
 import { getUserById, createUser } from "../services/users.service";
 import { requireAuth, AuthRequest } from "../middleware/auth.middleware";
+import { authLimiter } from "../middleware/rate-limit.middleware";
 
 const router = Router();
 
 // ──────────────────────────────────────────────────────────────────────────────
 // POST /auth/signup
-// Se llama DESPUÉS de que Cognito/Supabase confirme el email del usuario.
-// Crea el registro del usuario en la base de datos con su sub/uuid.
 // ──────────────────────────────────────────────────────────────────────────────
-router.post("/signup", async (req: Request, res: Response): Promise<void> => {
+router.post("/signup", authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { uid, name, email } = req.body;
 
   if (!uid || !name || !email) {
@@ -53,10 +52,8 @@ router.post("/signup", async (req: Request, res: Response): Promise<void> => {
 
 // ──────────────────────────────────────────────────────────────────────────────
 // POST /auth/signin
-// Recibe el token (ID Token de Cognito o Access Token de Supabase) y lo valida.
-// Retorna sessionCookie = el mismo Token (el frontend lo guarda en cookie httpOnly).
 // ──────────────────────────────────────────────────────────────────────────────
-router.post("/signin", async (req: Request, res: Response): Promise<void> => {
+router.post("/signin", authLimiter, async (req: Request, res: Response): Promise<void> => {
   const { idToken } = req.body;
 
   if (!idToken) {

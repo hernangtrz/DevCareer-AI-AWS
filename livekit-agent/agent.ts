@@ -130,8 +130,8 @@ export default defineAgent({
         `- Al finalizar todas las preguntas, agradece formalmente al usuario por su tiempo, dile que su entrevista ha concluido y que el sistema generará su reporte en el dashboard de inmediato. Despídete amablemente.`;
     }
 
-    // Groq como LLM (usando modelo disponible y activo)
-    const groqModel = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
+    // Groq como LLM (modelo conversacional de baja latencia sin tokens de razonamiento)
+    const groqModel = process.env.GROQ_MODEL || 'qwen/qwen3.8-27b';
     console.log(`[Agent] Utilizando modelo LLM en Groq: ${groqModel}`);
 
     // Crear el pipeline con AgentSession

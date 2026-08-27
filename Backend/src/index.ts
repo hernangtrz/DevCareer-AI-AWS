@@ -2,7 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 
-import { generalLimiter, authLimiter } from "./middleware/rate-limit.middleware";
+import { generalLimiter } from "./middleware/rate-limit.middleware";
 import authRoutes from "./routes/auth.routes";
 import interviewsRoutes from "./routes/interviews.routes";
 import feedbackRoutes from "./routes/feedback.routes";
@@ -26,7 +26,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting general
+// Rate limiting general (solo activo en producción para tráfico externo)
 app.use(generalLimiter);
 
 // ── Health check ───────────────────────────────────────────────────────────────
@@ -35,7 +35,7 @@ app.get("/health", (_req, res) => {
 });
 
 // ── Rutas de la Aplicación ────────────────────────────────────────────────────
-app.use("/auth", authLimiter, authRoutes);
+app.use("/auth", authRoutes);
 app.use("/interviews", interviewsRoutes);
 app.use("/feedback", feedbackRoutes);
 app.use("/api/livekit", livekitRoutes);
