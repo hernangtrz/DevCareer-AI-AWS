@@ -38,13 +38,6 @@ const NavbarLinks = ({ userName, userEmail }: NavbarLinksProps) => {
       badge: "Arena",
     },
     {
-      href: "/system-design",
-      label: t("nav_system_design") || "System Design",
-      icon: <Cpu className="h-4 w-4" />,
-      active: pathname.startsWith("/system-design"),
-      badge: "Nuevo",
-    },
-    {
       href: "/jobs",
       label: t("nav_jobs") || "Empleos",
       icon: <Briefcase className="h-4 w-4" />,

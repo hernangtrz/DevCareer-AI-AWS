@@ -173,8 +173,8 @@ const CvAnalyzerUpload = () => {
         formData.append("cvText", cvPastedText);
       }
 
-      // Call the Next.js proxy route (same origin) which forwards to the Express backend
-      const response = await fetch("/api/cv/analyze", {
+      // Call the unified Express backend route via Next.js proxy
+      const response = await fetch("/api/proxy/api/cv/analyze", {
         method: "POST",
         body: formData,
       });

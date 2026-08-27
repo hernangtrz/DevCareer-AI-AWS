@@ -51,13 +51,6 @@ export default function AppSidebar({ userName, userEmail }: AppSidebarProps) {
       active: pathname.startsWith("/code-challenge"),
       badge: "SOLID",
     },
-    {
-      href: "/system-design",
-      label: t("nav_system_design") || "System Design",
-      icon: <Cpu className="w-4 h-4" />,
-      active: pathname.startsWith("/system-design"),
-      badge: "Nuevo",
-    },
   ];
 
   const placementNavLinks = [

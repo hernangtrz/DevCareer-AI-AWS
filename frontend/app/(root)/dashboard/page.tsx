@@ -8,7 +8,7 @@ import InterviewCard from "@/components/InterviewCard";
 import { getCurrentUser, getSessionCookie, getLanguageCookie } from "@/lib/api.server";
 import { getInterviewsByUserId } from "@/lib/api";
 import { interviewTemplates } from "@/constants";
-import { FileText, ArrowRight, Code2, Cpu, Briefcase, Sparkles } from "lucide-react";
+import { FileText, ArrowRight, Code2, BarChart3, Briefcase, Sparkles } from "lucide-react";
 import { translations } from "@/lib/translations";
 
 const Page = async () => {
@@ -42,11 +42,11 @@ const Page = async () => {
       iconColor: "text-cyan-400",
     },
     {
-      icon: <Cpu className="h-5 w-5" />,
-      title: t.dash_system_design_title || "System Design Simulator",
-      description: t.dash_system_design_desc || "Pizarra interactiva para diseñar arquitecturas cloud.",
-      href: "/system-design",
-      badge: "Arquitectura",
+      icon: <BarChart3 className="h-5 w-5" />,
+      title: "Progreso & Analytics",
+      description: "Índice de empleabilidad, radar de competencias y detector de brechas.",
+      href: "/analytics",
+      badge: "Métricas",
       color: "from-amber-500/20 to-amber-600/5 border-amber-500/20",
       iconColor: "text-amber-400",
     },

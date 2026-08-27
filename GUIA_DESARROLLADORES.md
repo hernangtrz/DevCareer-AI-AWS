@@ -66,12 +66,8 @@ DevCareer AI/
 │   │   │   ├── interview/           # Formulario y Sala de entrevista de voz en vivo
 │   │   │   ├── cv/                  # CV & ATS Intelligence Hub (Builder + Scanner)
 │   │   │   ├── code-challenge/      # Retos de código y patrones de diseño (/code-challenge/[id])
-│   │   │   ├── system-design/       # [Shell listo] Pizarra de arquitectura cloud
-│   │   │   ├── jobs/                # [Shell listo] Smart Job Portal y postulación
-│   │   │   └── analytics/           # [Shell listo] Dashboard de métricas y readiness
-│   │   ├── api/                     # Server Routes de Next.js
-│   │   │   ├── cv/analyze/          # Análisis multimodal de PDF con Gemini
-│   │   │   └── code/feedback/       # Evaluación de código, SOLID y Big-O con Gemini
+│   │   │   ├── jobs/                # Smart Job Portal y postulación
+│   │   │   └── analytics/           # Dashboard de métricas, readiness y brechas
 │   │   └── layout.tsx & page.tsx    # Layout raíz y Landing page
 │   ├── components/                  # Componentes reutilizables (AppSidebar, UserMenu, Forms, etc.)
 │   ├── contexts/                    # Contextos globales (LanguageContext, AuthContext)
@@ -150,15 +146,6 @@ Estos son los 3 módulos que vamos a desarrollar a continuación. Las rutas base
 
 ---
 
-### 🏗️ Módulo B: System Design Simulator (Pizarra de Arquitectura)
-* **Ruta frontend:** `frontend/app/(root)/system-design/page.tsx`
-* **Objetivo:** Una pizarra interactiva donde el usuario diseña arquitecturas de software cloud para resolver problemas de alta escala (ej. *"Diseñar un clon de Uber"* o *"Acortador de URLs a escala millonaria"*).
-* **Componentes y funcionalidades a construir:**
-  1. **Canvas Interactivo:** Paleta de componentes cloud (*Load Balancers, Microservicios, Redis Cache, DynamoDB/Postgres, Message Queues SQS/Kafka, S3, CDN*).
-  2. **Conexiones y Acciones:** Capacidad de arrastrar nodos, conectarlos con flechas direccionales y soporte de *Deshacer/Rehacer (Undo/Redo)*.
-  3. **Simulador de Carga y Evaluación con IA:**
-     - Botón *"Simular Carga y Evaluar"*: Envía la topología del grafo a Gemini.
-     - Detección de **Puntos Únicos de Falla (SPOF)** y cuellos de botella.
      - Validación del **Teorema CAP** (consistencia vs disponibilidad).
      - Estimación de costos mensuales de infraestructura.
 * **🎯 Patrones de software a aplicar:** **Composite Pattern** (árbol de nodos y clusters), **Command Pattern** (Undo/Redo en el canvas), **Strategy Pattern** (estrategias de evaluación de seguridad, costo y escalabilidad).

@@ -111,7 +111,7 @@ async function fetchAIFeedback(
   totalCount: number,
   isDesignPattern: boolean
 ): Promise<AIFeedback> {
-  const res = await fetch("/api/code/feedback", {
+  const res = await fetch("/api/proxy/code/feedback", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

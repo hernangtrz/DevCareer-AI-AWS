@@ -1,42 +1,76 @@
 import { Router, Request, Response } from "express";
+import multer from "multer";
+import { analyzeCvAts, callGeminiRaw } from "../services/gemini.service";
+import { aiRateLimiter } from "../middleware/rate-limit.middleware";
 
 const router = Router();
 
+// Configure multer for in-memory PDF uploads (max 8MB)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 },
+});
 
-// ── Helper: llamada a Gemini ──────────────────────────────────────────────────
-async function callGemini(prompt: string, temperature = 0.4): Promise<any> {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!apiKey) throw new Error("Falta GOOGLE_GENERATIVE_AI_API_KEY.");
+// Apply rate limiting to all AI CV endpoints
+router.use(aiRateLimiter);
 
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
+// ──────────────────────────────────────────────────────────────────────────────
+// POST /api/cv/analyze
+// Soporta tanto subida de archivo PDF (multipart/form-data) como texto pegado (JSON)
+// ──────────────────────────────────────────────────────────────────────────────
+router.post(
+  "/analyze",
+  upload.single("cvFile"),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const jobDescription = req.body.jobDescription || "";
+      const cvText = req.body.cvText || "";
+      const file = req.file;
 
-  const res = await fetch(apiUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature,
-        responseMimeType: "application/json",
-      },
-    }),
-  });
+      if (!jobDescription || jobDescription.trim().length === 0) {
+        res.status(400).json({
+          success: false,
+          message: "La descripción de la oferta de empleo es obligatoria.",
+        });
+        return;
+      }
 
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${errBody}`);
+      if (!file && (!cvText || cvText.trim().length === 0)) {
+        res.status(400).json({
+          success: false,
+          message: "Debes adjuntar un archivo PDF o ingresar el texto de tu currículum.",
+        });
+        return;
+      }
+
+      let pdfBase64: string | undefined = undefined;
+      if (file && file.mimetype === "application/pdf") {
+        pdfBase64 = file.buffer.toString("base64");
+      }
+
+      const analysis = await analyzeCvAts({
+        jobDescription,
+        cvText: !pdfBase64 ? cvText : undefined,
+        pdfBase64,
+      });
+
+      res.status(200).json({
+        success: true,
+        data: analysis,
+      });
+    } catch (error: any) {
+      console.error("[CvRoutes] Error en /api/cv/analyze:", error?.message || error);
+      res.status(500).json({
+        success: false,
+        message: error?.message || "Ocurrió un error al analizar el CV con la IA.",
+      });
+    }
   }
+);
 
-  const data = (await res.json()) as any;
-  const rawText: string = data.candidates[0].content.parts[0].text;
-  const cleanText = rawText.replace(/```json|```/g, "").trim();
-  return JSON.parse(cleanText);
-}
-
-// NOTE: /api/cv/analyze is handled directly by the Next.js server route
-// (frontend/app/api/cv/analyze/route.ts) using Gemini multimodal PDF support.
-
+// ──────────────────────────────────────────────────────────────────────────────
 // POST /api/cv/improve - Optimizar hoja de vida con Gemini AI
+// ──────────────────────────────────────────────────────────────────────────────
 router.post("/improve", async (req: Request, res: Response): Promise<void> => {
   const { personalInfo, experiences, skills, education, targetRole, language, profileText, translate } = req.body;
 
@@ -65,7 +99,7 @@ Realiza las siguientes mejoras (en el idioma solicitado):
 4. **Habilidades técnicas (skills)**: Normaliza los nombres (ej. "reactjs" -> "React"). Si pidió traducción, traduce habilidades no técnicas (ej. "Trabajo en equipo" -> "Teamwork").
 5. **Mantener consistencia**: No alteres los nombres de las empresas ni las fechas.
 
-Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques de código, sin markdown, sin backticks:
+Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así:
 {
   "personalInfo": {
     "headline": "Título profesional optimizado en el idioma solicitado"
@@ -89,48 +123,24 @@ Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques d
   ]
 }`;
 
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
-    }
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
-
-    const geminiRes = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.5,
-          responseMimeType: "application/json"
-        },
-      }),
-    });
-
-    if (!geminiRes.ok) {
-      throw new Error(`Error de Gemini API: ${geminiRes.status} ${geminiRes.statusText}`);
-    }
-
-    const geminiData = await geminiRes.json() as any;
-    const rawText: string = geminiData.candidates[0].content.parts[0].text;
-    const cleanText = rawText.replace(/```json|```/g, "").trim();
-    const improvedData = JSON.parse(cleanText);
+    const improvedData = await callGeminiRaw([{ text: prompt }], { temperature: 0.4 });
 
     res.status(200).json({
       success: true,
-      data: improvedData
+      data: improvedData,
     });
   } catch (error: any) {
-    console.error("Error optimizando CV con Gemini:", error?.message || error);
+    console.error("[CvRoutes] Error optimizando CV con Gemini:", error?.message || error);
     res.status(500).json({
       success: false,
-      message: error?.message || "Ocurrió un error al procesar la optimización del CV."
+      message: error?.message || "Ocurrió un error al procesar la optimización del CV.",
     });
   }
 });
 
-// POST /api/cv/improve-profile - Optimizar redacción del perfil profesional (Acerca de mí) con Gemini AI
+// ──────────────────────────────────────────────────────────────────────────────
+// POST /api/cv/improve-profile - Optimizar resumen ejecutivo del perfil
+// ──────────────────────────────────────────────────────────────────────────────
 router.post("/improve-profile", async (req: Request, res: Response): Promise<void> => {
   const { profileText, targetRole, language } = req.body;
 
@@ -149,48 +159,22 @@ Instrucciones:
 3. Debe ser un único párrafo conciso (entre 3 y 5 oraciones, máximo 120 palabras).
 4. No agregues certificaciones o estudios específicos que no se mencionen en el texto original, mantén la fidelidad a los hechos reales.
 
-Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así, sin bloques de código, sin markdown, sin backticks:
+Devuelve ÚNICAMENTE un objeto JSON estructurado exactamente así:
 {
   "refinedProfile": "Párrafo de perfil profesional mejorado en el idioma solicitado"
 }`;
 
-    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Falta la API Key de Google Generative AI (GOOGLE_GENERATIVE_AI_API_KEY).");
-    }
-
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
-
-    const geminiRes = await fetch(apiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.6,
-          responseMimeType: "application/json"
-        },
-      }),
-    });
-
-    if (!geminiRes.ok) {
-      throw new Error(`Error de Gemini API: ${geminiRes.status} ${geminiRes.statusText}`);
-    }
-
-    const geminiData = await geminiRes.json() as any;
-    const rawText: string = geminiData.candidates[0].content.parts[0].text;
-    const cleanText = rawText.replace(/```json|```/g, "").trim();
-    const result = JSON.parse(cleanText);
+    const result = await callGeminiRaw([{ text: prompt }], { temperature: 0.5 });
 
     res.status(200).json({
       success: true,
-      data: result
+      data: result,
     });
   } catch (error: any) {
-    console.error("Error optimizando perfil de CV con Gemini:", error?.message || error);
+    console.error("[CvRoutes] Error optimizando perfil con Gemini:", error?.message || error);
     res.status(500).json({
       success: false,
-      message: error?.message || "Ocurrió un error al procesar la optimización del perfil."
+      message: error?.message || "Ocurrió un error al procesar la optimización del perfil.",
     });
   }
 });
